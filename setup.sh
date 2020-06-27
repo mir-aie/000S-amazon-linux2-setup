@@ -39,6 +39,8 @@ sudo systemctl status httpd
 sudo systemctl enable httpd
 sudo systemctl is-enabled httpd
 sudo sh -c 'echo 'OK' > /var/www/html/index.html'
+curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
+sudo mv security.conf /etc/httpd/conf.d/
 
 echo 'mariadbをインストール'
 sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
