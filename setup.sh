@@ -164,3 +164,6 @@ echo 'sudo systemctl status redis.service'
 echo 'sudo systemctl start redis.service'
 echo 'sudo systemctl enable redis.service'
 echo
+
+echo 'ログローテート'
+echo 'sudo cp files/etc_logrotated_laravel.txt' /etc/logrotate.d/laravel
