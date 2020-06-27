@@ -1,0 +1,63 @@
+# バージョン情報の隠蔽
+ServerTokens Prod
+Header unset "X-Powered-By"
+
+# httpoxy 対策
+RequestHeader unset Proxy
+
+# クリックジャッキング対策
+Header append X-Frame-Options SAMEORIGIN
+
+# XSS対策
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Content-Type-Options nosniff
+#Header set Content-Security-Policy: "default-src 'self'"
+#Header set X-Content-Security-Policy: "allow 'self'"
+#Header always set Public-Key-Pins "pin-sha256=\"base64+primary==\"; pin-sha256=\"base64+backup==\"; max-age=5184000; includeSubDomains"
+
+# XST対策
+TraceEnable Off
+
+<Directory /var/www/html>
+    # .htaccess の有効化
+    AllowOverride All
+
+    # ファイル一覧出力の禁止
+    Options -Indexes
+
+    # Apache 2.2以前の対策
+    <IfVersion < 2.3>
+        # バージョン情報の隠蔽
+        ServerSignature Off
+        # ETagのinode情報の隠蔽
+        FileETag MTime Size
+    </IfVersion>
+
+</Directory>
+
+<Directory "/var/www/cgi-bin">
+    <IfVersion < 2.3>
+        ServerSignature Off
+        FileETag MTime Size
+    </IfVersion>
+</Directory>
+
+# .git から始まるファイルへのアクセスを禁止
+<Files ~ "^\.git">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# .git/ フォルダ以下のファイル・ディレクトリへのアクセスを禁止
+<Directorymatch "^/.*/\.git/">
+    Order deny,allow
+    Deny from all
+</Directorymatch>
+
+# AWS ALB 配下で HSTS の設定を行う方法
+#<VirtualHost *:80>
+#    RewriteEngine On
+#    RewriteCond %{HTTP:X-Forwarded-Proto} =http
+#    RewriteRule .* https://%{HTTP:Host}%{REQUEST_URI} [L,R=permanent]
+#    Header always set Strict-Transport-Security "max-age=300; includeSubDomains"
+#</VirtualHost>
