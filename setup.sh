@@ -7,8 +7,8 @@
 # (必須)
 # ホスト名を個々に設定する
 HOSTNAME=mirai_dev_01
-GIT_USERNAME=obata
-GIT_EMAIL=email
+GIT_USERNAME=miraie
+GIT_EMAIL=email@miraie.com
 
 echo "HOSTNAME=$HOSTNAME"
 
