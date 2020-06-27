@@ -10,6 +10,9 @@ HOSTNAME=mirai_dev_01
 GIT_USERNAME=miraie
 GIT_EMAIL=email@miraie.com
 
+INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
+PUBLIC_IPV4=`curl 169.254.169.254/latest/meta-data/public-ipv4/`
+
 echo "HOSTNAME=$HOSTNAME"
 
 # Show HOSTNAME to PROMPT
@@ -98,9 +101,9 @@ sudo usermod -G wheel my-user
 
 echo 'remote用環境作成...'
 sudo mkdir ~ec2-user/remote
-sudo chmod a+w ~ec2-user/remote
+sudo chown ec2-user ~ec2-user/remote
 sudo mkdir ~my-user/remote
-sudo chmod a+w ~my-user/remote
+sudo chown my-user ~my-user/remote
 
 echo 'laravelコンテンツ用ディレクトリ作成...'
 sudo mkdir /var/www/dev
@@ -120,7 +123,6 @@ rm CloudWatchMonitoringScripts-1.2.2.zip
 sudo mv aws-scripts-mon /root
 
 
-
 # 以下手動
 echo '================================================='
 echo '以下手動'
@@ -130,33 +132,28 @@ echo '$ sudo visudo'
 echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
 echo
 
-echo 'my-userに.sshを付与'
-echo 'sudo rsync -a ~/.ssh/authorized_keys ~my-user/.ssh/'
-echo 'sudo chown -R my-user:my-user ~my-user/.ssh'
-echo 'sudo chmod 700 ~my-user/.ssh/'
-echo 'sudo chmod 600 ~my-user/.ssh/**'
-echo 'curl -o config https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/home_my_user_ssh_config.txt'
-echo 'mv config ~my-user/.ssh/'
-echo 'chmod 600 ~my-user/.ssh/config'
-
 echo 'mariadbのセキュリティ設定'
 echo '$ sudo mysql_secure_installation'
 echo
 
 echo 'git用のsshの登録'
 echo '$ ssh-keygen -t rsa'
-echo '$ cat ~/.ssh/id_rsa.pub'
+echo '$ cat ~ec2-user/.ssh/id_rsa.pub'
 echo 'github.com にSSHKEYを追加'
 echo 'https://github.com/settings/ssh/new'
 echo 'git用の.ssh/configを作成'
 echo '$ ssh -T git@github.com'
 echo
 
-echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
-echo "AmazonEC2RoleforSSM"
-echo "CloudWatchAgentServerPolicy"
-echo "AmazonSSMManagedInstanceCore"
-echo
+echo 'my-userに.sshを付与'
+echo 'sudo rsync -a ~ec2-user/.ssh/authorized_keys ~my-user/.ssh/'
+echo 'sudo chown -R my-user:my-user ~my-user/.ssh'
+echo 'sudo chmod 700 ~my-user/.ssh/'
+echo 'sudo chmod 600 ~my-user/.ssh/**'
+echo 'curl -o config https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/home_my_user_ssh_config.txt'
+echo 'mv config ~my-user/.ssh/'
+echo 'chmod 600 ~my-user/.ssh/config'
+echo 'chmod 600 ~ec2-user/.ssh/config'
 
 echo 'CloudWatchカスタムメトリクスをcrontabに追加'
 echo 'sudo /etc/crontab'
@@ -173,5 +170,11 @@ echo 'redisの起動設定'
 echo 'sudo systemctl status redis.service'
 echo 'sudo systemctl start redis.service'
 echo 'sudo systemctl enable redis.service'
+echo
+
+echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
+echo "AmazonEC2RoleforSSM"
+echo "CloudWatchAgentServerPolicy"
+echo "AmazonSSMManagedInstanceCore"
 echo
 
