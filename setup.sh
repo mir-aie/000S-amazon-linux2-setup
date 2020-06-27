@@ -43,9 +43,6 @@ sudo sh -c 'echo 'OK' > /var/www/html/index.html'
 echo 'mariadbをインストール'
 sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
 sudo yum install -y mariadb-server
-sudo systemctl start mariadb
-sudo systemctl enable mariadb
-sudo systemctl is-enabled mariadb
 sudo sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'phpをインストール'
@@ -61,9 +58,6 @@ diff /etc/php.ini.default /etc/php.ini
 
 echo 'redisをインストール'
 sudo amazon-linux-extras install -y redis4.0=stable
-sudo systemctl status redis.service
-sudo systemctl start redis.service
-sudo systemctl enable redis.service
 sudo systemctl is-enabled redis.service
 
 echo 'python3.8をインストール'
@@ -124,6 +118,8 @@ sudo mv aws-scripts-mon /root
 
 
 # 以下手動
+echo '================================================='
+echo '以下手動'
 
 echo 'my-userにsudo権限を付与'
 echo '$ sudo visudo'
@@ -138,6 +134,7 @@ echo 'git用のsshの登録'
 echo '$ ssh-keygen -t rsa'
 echo '$ cat ~/.ssh/id_rsa.pub'
 echo 'github.com にSSHKEYを追加'
+echo 'https://github.com/settings/ssh/new'
 echo 'git用の.ssh/configを作成'
 echo '$ ssh -T git@github.com'
 echo
@@ -146,11 +143,24 @@ echo '/etc/httpd/cond.d/security.confを設置'
 echo
 
 echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
-AmazonEC2RoleforSSM
-CloudWatchAgentServerPolicy
-AmazonSSMManagedInstanceCore
+echo "AmazonEC2RoleforSSM"
+echo "CloudWatchAgentServerPolicy"
+echo "AmazonSSMManagedInstanceCore"
+echo
 
 echo 'CloudWatchカスタムメトリクスをcrontabに追加'
 echo 'sudo /etc/crontab'
 echo '*/5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1'
+echo
 
+echo 'mariadbの起動設定'
+echo 'sudo systemctl start mariadb'
+echo 'sudo systemctl enable mariadb'
+echo 'sudo systemctl is-enabled mariadb'
+echo
+
+echo 'redisの起動設定'
+echo 'sudo systemctl status redis.service'
+echo 'sudo systemctl start redis.service'
+echo 'sudo systemctl enable redis.service'
+echo
