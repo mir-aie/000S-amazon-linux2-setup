@@ -85,7 +85,17 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 nvm install node
 node -v
 
-echo '新規ユーザーを作成'
+echo 'セキュリティパッチを自動適用'
+sudo yum install yum-cron -y
+sudo cp /etc/yum/yum-cron.conf /etc/yum/yum-cron.conf.backup
+sudo sed -i "s/^update_cmd.*$/update_cmd = security/g" /etc/yum/yum-cron.conf
+sudo sed -i "s/^apply_updates.*$/apply_updates = yes/g" /etc/yum/yum-cron.conf
+diff /etc/yum/yum-cron.conf.backup /etc/yum/yum-cron.conf
+sudo systemctl start yum-cron
+sudo systemctl enable yum-cron
+sudo systemctl status yum-cron
+
+echo 'my-userを作成'
 sudo adduser my-user
 sudo usermod -G wheel my-user
 sudo rsync -a ~/.ssh/authorized_keys ~my-user/.ssh/
@@ -94,8 +104,24 @@ sudo chmod 700 ~my-user/.ssh/
 sudo chmod 600 ~my-user/.ssh/**
 
 echo 'remote用環境作成'
-mkdir ~ec2-user/remote
-mkdir ~my-user/remote
+sudo mkdir ~ec2-user/remote
+sudo chmod a+w ~ec2-user/remote
+sudo mkdir ~my-user/remote
+sudo chmod a+w ~my-user/remote
+
+echo 'laravel用ディレクトリ'
+sudo mkdir /var/www/dev
+sudo chmod a+w /var/www/dev
+sudo mkdir /var/www/production
+sudo chmod a+w /var/www/production
+
+echo 'cloudwatch カスタムメトリクス'
+sudo yum install -y perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA.x86_64
+curl https://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.2.zip -O
+unzip CloudWatchMonitoringScripts-1.2.2.zip
+rm CloudWatchMonitoringScripts-1.2.2.zip
+sudo mv aws-scripts-mon /root
+
 
 # 以下手動
 
@@ -111,5 +137,20 @@ echo
 echo 'git用のsshの登録'
 echo '$ ssh-keygen -t rsa'
 echo '$ cat ~/.ssh/id_rsa.pub'
-echo 'github にSSHKEYを追加'
+echo 'github.com にSSHKEYを追加'
+echo 'git用の.ssh/configを作成'
+echo '$ ssh -T git@github.com'
+echo
+
+echo '/etc/httpd/cond.d/security.confを設置'
+echo
+
+echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
+AmazonEC2RoleforSSM
+CloudWatchAgentServerPolicy
+AmazonSSMManagedInstanceCore
+
+echo 'CloudWatchカスタムメトリクスをcrontabに追加'
+echo 'sudo /etc/crontab'
+echo '*/5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1'
 
