@@ -1,0 +1,23 @@
+PHP 7.4.5 (cli) (built: Apr 23 2020 00:10:21) ( NTS )
+Copyright (c) The PHP Group
+Zend Engine v3.4.0, Copyright (c) Zend Technologies
+    with Zend OPcache v7.4.5, Copyright (c), by Zend Technologies
+
+
+sudo systemctl stop httpd
+sudo yum list installed | grep php
+sudo sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
+sudo amazon-linux-extras disable php7.2
+sudo yum -y remove php-*
+sudo yum clean all
+sudo amazon-linux-extras enable php7.4=stable
+sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-igbinary php-pecl-redis php-xml php-pdo php-fpm php-mysqlnd
+sudo cp /etc/php.ini /etc/php.ini.default
+sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
+sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
+sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
+diff /etc/php.ini.default /etc/php.ini
+sudo systemctl restart httpd
+

@@ -6,18 +6,20 @@
 
 # (必須)
 # ホスト名を個々に設定する
-HOSTNAME=mirai_dev_01
+SERVER_NAME=mirai_dev_01
 GIT_USERNAME=miraie
 GIT_EMAIL=email@miraie.com
 
 INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
 PUBLIC_IPV4=`curl 169.254.169.254/latest/meta-data/public-ipv4/`
 
-echo "HOSTNAME=$HOSTNAME"
+echo "SERVER_NAME=$SERVER_NAME"
+echo "INSTANCE_ID=$INSTANCE_ID"
+echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
-sudo sh -c 'echo "export NICKNAME=${HOSTNAME}" > /etc/profile.d/prompt.sh'
+sudo sh -c 'echo "export NICKNAME=${SERVER_NAME}" > /etc/profile.d/prompt.sh'
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 echo 'システムファイル更新...'
@@ -53,13 +55,13 @@ sudo sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'phpをインストール...'
 sudo amazon-linux-extras enable php7.4=stable
-sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-igbinary php-pecl-redis php-xml
+sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-igbinary php-pecl-redis php-xml php-pdo php-fpm php-mysqlnd
 sudo cp /etc/php.ini /etc/php.ini.default
-sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
-sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
-sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
-sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
+sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
+sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
+sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
 
 echo 'redisをインストール...'
@@ -122,7 +124,6 @@ unzip CloudWatchMonitoringScripts-1.2.2.zip
 rm CloudWatchMonitoringScripts-1.2.2.zip
 sudo mv aws-scripts-mon /root
 
-
 # 以下手動
 echo '================================================='
 echo '以下手動'
@@ -177,4 +178,13 @@ echo "AmazonEC2RoleforSSM"
 echo "CloudWatchAgentServerPolicy"
 echo "AmazonSSMManagedInstanceCore"
 echo
+
+echo '================================================='
+echo "SERVER_NAME=$SERVER_NAME"
+echo "INSTANCE_ID=$INSTANCE_ID"
+echo "PUBLIC_IPV4=$PUBLIC_IPV4"
+
+echo 'Reboot'
+sudo reboot -n
+
 
