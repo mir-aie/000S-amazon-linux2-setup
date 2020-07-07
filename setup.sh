@@ -39,14 +39,20 @@ sudo sed -i "s/#UseDNS yes/UseDNS no/" /etc/ssh/sshd_config
 
 echo 'httpdをインストール...'
 sudo yum install -y httpd
-sudo systemctl start httpd
-sudo systemctl status httpd
-sudo systemctl enable httpd
 sudo systemctl is-enabled httpd
 curl -o index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/var_www_html_index.html
 sudo mv index.html /var/www/html/
 curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
 sudo mv security.conf /etc/httpd/conf.d/
+# Safariのhttp2エラーを回避
+sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
+# KeepAlive On
+echo 'KeepAlive On' > /etc/httpd/conf.d/keepalive.conf
+# KeepAliveTimeout
+echo 'KeepAliveTimeout 120' >> /etc/httpd/conf.d/keepalive.conf
+sudo systemctl start httpd
+sudo systemctl status httpd
+sudo systemctl enable httpd
 
 echo 'mariadbをインストール...'
 sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
