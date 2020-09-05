@@ -6,7 +6,7 @@
 
 # (必須)
 # ホスト名を個々に設定する
-SERVER_NAME=mirai_dev_01
+SERVER_NAME=dev2.mi-sp.net
 GIT_USERNAME=miraie
 GIT_EMAIL=email@miraie.com
 
@@ -47,9 +47,10 @@ sudo mv security.conf /etc/httpd/conf.d/
 # Safariのhttp2エラーを回避
 sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
 # KeepAlive On
-echo 'KeepAlive On' > /etc/httpd/conf.d/keepalive.conf
+sudo sh -c 'echo "KeepAlive On" > /etc/httpd/conf.d/keepalive.conf'
+
 # KeepAliveTimeout
-echo 'KeepAliveTimeout 120' >> /etc/httpd/conf.d/keepalive.conf
+sudo sh -c 'echo "KeepAliveTimeout 120" >> /etc/httpd/conf.d/keepalive.conf'
 sudo systemctl start httpd
 sudo systemctl status httpd
 sudo systemctl enable httpd
@@ -72,6 +73,9 @@ diff /etc/php.ini.default /etc/php.ini
 
 echo 'redisをインストール...'
 sudo amazon-linux-extras install -y redis4.0=stable
+sudo systemctl status redis.service
+sudo systemctl start redis.service
+sudo systemctl enable redis.service
 sudo systemctl is-enabled redis.service
 
 echo 'python3.8をインストール...'
@@ -103,15 +107,15 @@ sudo systemctl start yum-cron
 sudo systemctl enable yum-cron
 sudo systemctl status yum-cron
 
-echo 'my-userを作成...'
-sudo adduser my-user
-sudo usermod -G wheel my-user
+#echo 'my-userを作成...'
+#sudo adduser my-user
+#sudo usermod -G wheel my-user
 
 echo 'remote用環境作成...'
 sudo mkdir ~ec2-user/remote
 sudo chown ec2-user ~ec2-user/remote
-sudo mkdir ~my-user/remote
-sudo chown my-user ~my-user/remote
+#sudo mkdir ~my-user/remote
+#sudo chown my-user ~my-user/remote
 
 echo 'laravelコンテンツ用ディレクトリ作成...'
 sudo mkdir /var/www/dev
@@ -130,67 +134,106 @@ unzip CloudWatchMonitoringScripts-1.2.2.zip
 rm CloudWatchMonitoringScripts-1.2.2.zip
 sudo mv aws-scripts-mon /root
 
+#https://chariosan.com/2019/11/10/supervisor4_al2/
+echo 'install supervisord'
+sudo yum install -y python3
+sudo pip3 install supervisor
+echo_supervisord_conf > ~/supervisord.conf
+sudo mkdir /etc/supervisord
+sudo mv ~/supervisord.conf /etc/supervisord/supervisord.conf
+sudo mkdir /etc/supervisord/conf.d
+sudo cp /etc/supervisord/supervisord.conf /etc/supervisord/supervisord.conf.original
+sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;port=127.0.0.1:9001/port=127.0.0.1:9001/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/logfile=\/tmp\/supervisord.log/logfile=\/var\/log\/supervisord.log/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/\/tmp\/supervisord.pid/\/var\/run\/supervisord.pid/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/serverurl=unix:\/\/\/tmp\/supervisor.sock/; serverurl=unix:\/\/\/tmp\/supervisor.sock/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;serverurl=http:\/\/127.0.0.1:9001/serverurl=http:\/\/127.0.0.1:9001/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;files = relative\/directory\/\*.ini/files = \/etc\/supervisord\/conf.d\/\*.conf/" /etc/supervisord/supervisord.conf
+diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
+curl -o supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt 
+sudo mv supervisord.service /etc/systemd/system/
+sudo systemctl start supervisord
+sudo systemctl status supervisord
+sudo systemctl enable supervisord
+
+#/etc/supervisord/conf.d/141L-call-v3.conf
+#[program:141L-call-v3-queue]
+#process_name=%(program_name)s_%(process_num)02d
+#directory=/var/www/dev/141L-call-v3
+#command=/usr/bin/php artisan queue:work
+#autostart=true
+#autorestart=true
+#user=ec2-user
+#numprocs=4
+#redirect_stderr=true
+#stdout_logfile=/var/www/dev/141L-call-v3/storage/logs/queue-worker.log
+
+
+
 # 以下手動
 echo '================================================='
 echo '以下手動'
 
-echo 'my-userにsudo権限を付与'
-echo '$ sudo visudo'
-echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
-echo
-
-echo 'mariadbのセキュリティ設定'
-echo '$ sudo mysql_secure_installation'
-echo
+#echo 'my-userにsudo権限を付与'
+#echo '$ sudo visudo'
+#echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
+#echo
 
 echo 'git用のsshの登録'
-echo '$ ssh-keygen -t rsa'
-echo '$ cat ~ec2-user/.ssh/id_rsa.pub'
-echo 'github.com にSSHKEYを追加'
-echo 'https://github.com/settings/ssh/new'
-echo 'git用の.ssh/configを作成'
-echo '$ ssh -T git@github.com'
-echo
+ssh-keygen -t rsa
+cat ~ec2-user/.ssh/id_rsa.pub
+# github.com にSSHKEYを追加
+# https://github.com/settings/ssh/new
+# git用の.ssh/configを作成
+ssh -T git@github.com
 
-echo 'my-userに.sshを付与'
-echo 'sudo rsync -a ~ec2-user/.ssh/authorized_keys ~my-user/.ssh/'
-echo 'sudo chown -R my-user:my-user ~my-user/.ssh'
-echo 'sudo chmod 700 ~my-user/.ssh/'
-echo 'sudo chmod 600 ~my-user/.ssh/**'
-echo 'curl -o config https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/home_my_user_ssh_config.txt'
-echo 'mv config ~my-user/.ssh/'
-echo 'chmod 600 ~my-user/.ssh/config'
-echo 'chmod 600 ~ec2-user/.ssh/config'
+#echo 'my-userに.sshを付与'
+#echo 'sudo rsync -a ~ec2-user/.ssh/authorized_keys ~my-user/.ssh/'
+#echo 'sudo chown -R my-user:my-user ~my-user/.ssh'
+#echo 'sudo chmod 700 ~my-user/.ssh/'
+#echo 'sudo chmod 600 ~my-user/.ssh/**'
+#echo 'curl -o config https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/home_my_user_ssh_config.txt'
+#echo 'mv config ~my-user/.ssh/'
+#echo 'chmod 600 ~my-user/.ssh/config'
+#echo 'chmod 600 ~ec2-user/.ssh/config'
 
 echo 'CloudWatchカスタムメトリクスをcrontabに追加'
-echo 'sudo /etc/crontab'
-echo '*/5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1'
-echo
+sudo vi /etc/crontab
+# */5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1
 
 echo 'mariadbの起動設定'
-echo 'sudo systemctl start mariadb'
-echo 'sudo systemctl enable mariadb'
-echo 'sudo systemctl is-enabled mariadb'
-echo
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+sudo systemctl is-enabled mariadb
 
-echo 'redisの起動設定'
-echo 'sudo systemctl status redis.service'
-echo 'sudo systemctl start redis.service'
-echo 'sudo systemctl enable redis.service'
-echo
+echo 'mariadbのセキュリティ設定'
+sudo mysql_secure_installation
+
+
 
 echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
 echo "AmazonEC2RoleforSSM"
 echo "CloudWatchAgentServerPolicy"
 echo "AmazonSSMManagedInstanceCore"
-echo
 
-echo '================================================='
-echo "SERVER_NAME=$SERVER_NAME"
-echo "INSTANCE_ID=$INSTANCE_ID"
-echo "PUBLIC_IPV4=$PUBLIC_IPV4"
+# wkhtmltopdf
+https://wkhtmltopdf.org/downloads.html
+wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+sudo yum install wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+
+cd /usr/share/fonts
+
+# 日本語フォント
+sudo wget https://ipafont.ipa.go.jp/IPAexfont/ipaexm00201.zip
+sudo wget https://ipafont.ipa.go.jp/IPAexfont/ipaexg00201.zip
+sudo unzip ipaexg00201.zip
+sudo unzip ipaexm00201.zip
+sudo rm  *.zip
+fc-cache -fv
+fc-list | grep -i ipa
 
 echo 'Reboot'
 sudo reboot -n
-
 
