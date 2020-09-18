@@ -41,9 +41,9 @@ PWDP=`pwd -P`
 CURRENT=`basename $PWDP`
 echo $CURRENT
 if [ $CURRENT = 'fish' ]; then
-    echo "「FISH。それは、さかな」 を更新しています。https://stage-*.***.** でご確認ください"
+    echo "「FISH。それは、さかな」 を更新しています。https://staging-*.***.** でご確認ください"
 else
-    echo "「SKY。それは、そら」 を更新しています。https://stage-*.***.** でご確認ください"
+    echo "「SKY。それは、そら」 を更新しています。https://staging-*.***.** でご確認ください"
 fi
 
 

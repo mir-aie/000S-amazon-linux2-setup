@@ -79,10 +79,14 @@ curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf
+$SED -i "s/www./staging./" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
+DOMAIN_STAGING="staging-$DOMAIN"
 
 echo ".env を作成してください"
+echo "$DOMAIN を作成してください"
+echo "$DOMAIN_STAGING を作成してください"
 echo "sudo service httpd configtest を実行してください"
 echo "sudo service httpd restart を実行してください"
