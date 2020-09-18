@@ -4,7 +4,40 @@
 # Created   2020/6/27
 # Target    Amazon Linux 2
 
-hmpf-01
+prd-hmpf-ec2-cms-01
+prd-hmpf-ec2-cms-02
+prd-hmpf-ec2-web-01
+prd-hmpf-ec2-web-02
+prd-hmpf-ec2-web-03
+prd-hmpf-ec2-web-04
+stg-hmpf-ec2-cms-01
+stg-hmpf-ec2-web-01
+
+
+
+
+hmpf-cms-stg
+prd-hmpf-cms-01
+
+sudo su --login ec2-user
+
+sudo hostname stg-hmpf-web-01
+
+sudo vi /etc/sysconfig/network
+HOSTNAME=stg-hmpf-web-01
+
+
+sudo yum install -y httpd
+
+sudo systemctl start httpd.service
+sudo systemctl enable httpd.service
+sudo systemctl status httpd.service
+
+
+#===============================================
+
+
+
 
 # (必須)
 # ホスト名を個々に設定する
@@ -173,14 +206,7 @@ sudo systemctl enable supervisord
 #redirect_stderr=true
 #stdout_logfile=/var/www/dev/141L-call-v3/storage/logs/queue-worker.log
 
-cd ~
-mkdir -p bin
-cd bin
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_staging.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
-chmod +x *.sh
-cd -
+
 
 # 以下手動
 echo '================================================='
