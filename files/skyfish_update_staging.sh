@@ -13,8 +13,10 @@ BASEDIR=/var/www/production
 EXEC_USER=ec2-user
 PWD=`pwd`
 
-BASEDIR=/Users/obatasusumu/tmp/skyfish
-EXEC_USER=obatasusumu
+if [ -d /Users/obatasusumu ]; then
+    BASEDIR=/Users/obatasusumu/tmp/skyfish
+    EXEC_USER=obatasusumu
+fi
 
 if [ ! `whoami` = $EXEC_USER ]; then
     echo "エラー: $EXEC_USER になって実行してください。例: sudo su --login $EXEC_USER"

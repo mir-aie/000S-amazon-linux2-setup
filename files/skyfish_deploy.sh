@@ -14,9 +14,11 @@ BASEDIR=/var/www/production
 EXEC_USER=ec2-user
 LSOPT=--full-time
 
-BASEDIR=/Users/obatasusumu/tmp/skyfish
-EXEC_USER=obatasusumu
-LSOPT=
+if [ -d /Users/obatasusumu ]; then
+    BASEDIR=/Users/obatasusumu/tmp/skyfish
+    EXEC_USER=obatasusumu
+    LSOPT=
+fi
 
 if [ ! `whoami` = $EXEC_USER ]; then
     echo "エラー: $EXEC_USER になって実行してください。例: sudo su --login $EXEC_USER"

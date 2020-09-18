@@ -15,10 +15,12 @@ EXEC_USER=ec2-user
 SED=sed
 PWD=`pwd`
 
-BASEDIR=/Users/obatasusumu/tmp/skyfish/
-HTTPD_CONF_DIR=/tmp
-EXEC_USER=obatasusumu
-SED=gsed
+if [ -d /Users/obatasusumu ]; then
+    BASEDIR=/Users/obatasusumu/tmp/skyfish/
+    HTTPD_CONF_DIR=/tmp
+    EXEC_USER=obatasusumu
+    SED=gsed
+fi
 
 if [ ! `whoami` = $EXEC_USER ]; then
     echo "エラー: $EXEC_USER になって実行してください。例: sudo su --login $EXEC_USER"
