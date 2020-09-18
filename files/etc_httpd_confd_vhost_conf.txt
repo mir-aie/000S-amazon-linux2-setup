@@ -1,0 +1,13 @@
+<VirtualHost *:80>
+  ServerName DOMAIN
+  DocumentRoot /var/www/production/BASENAME/STAGE/public
+  AllowEncodedSlashes On
+  CustomLog logs/BASENAME-STAGE.access.log combined
+  ErrorLog logs/BASENAME-STAGE.error.log
+
+  <Directory "/var/www/production/BASENAME/STAGE/public">
+    Options Indexes FollowSymlinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+</VirtualHost>
