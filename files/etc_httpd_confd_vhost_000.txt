@@ -1,0 +1,7 @@
+<VirtualHost *:80>
+  ServerName www.example.com
+  DocumentRoot /var/www/html
+  AllowEncodedSlashes On
+  CustomLog logs/access_log combined
+  ErrorLog logs/error_log
+</VirtualHost>

@@ -47,6 +47,12 @@ curl -o index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-
 sudo mv index.html /var/www/html/
 curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
 sudo mv security.conf /etc/httpd/conf.d/
+
+
+curl -o vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
+sudo mv security.conf /etc/httpd/conf.d/
+
+
 # Safariのhttp2エラーを回避
 sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
 # KeepAlive On
@@ -181,6 +187,9 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
 chmod +x *.sh
 cd -
+
+echo 'alias ll="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
+
 
 # 以下手動
 echo '================================================='
