@@ -56,6 +56,7 @@ cd $DIR
 git clone $GIT_SSH sky
 cd sky
 composer install
+touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 cd -
@@ -63,14 +64,15 @@ cd -
 git clone $GIT_SSH fish
 cd fish
 composer install
+touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 cd -
 
-ln -s sky production
-ln -s fish staging
+ln -s sky live
+ln -s fish test
 
-STAGE=production
+STAGE=live
 curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
@@ -78,20 +80,20 @@ $SED -i "s/STAGE/$STAGE/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
-STAGE=staging
+STAGE=test
 curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf
-$SED -i "s/www\./staging\./" vhost.conf
+$SED -i "s/www\./test\./" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
-DOMAIN_STAGING="staging-$DOMAIN"
+DOMAIN_TEST="test-$DOMAIN"
 
 echo ".env を作成してください"
 echo "$DOMAIN を作成してください"
-echo "$DOMAIN_STAGING を作成してください"
+echo "$DOMAIN_TEST を作成してください"
 echo "sudo service httpd configtest を実行してください"
 echo "sudo service httpd restart を実行してください"
 echo "crontab を設定してください"

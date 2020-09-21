@@ -31,13 +31,13 @@ if [ ! `pwd | grep $BASEDIR` ]; then
         exit
 fi
 
-if [ ! -f staging/composer.json ]; then
+if [ ! -f test/composer.json ]; then
     echo "エラー: $BASEDIR のプロジェクトディレクトリで実行してください(2)。"
     echo "例: cd $BASEDIR/012L-sky-fish"
     exit
 fi
 
-if [ ! -f production/composer.json ]; then
+if [ ! -f live/composer.json ]; then
     echo "エラー: $BASEDIR のプロジェクトディレクトリで実行してください(2)。"
     echo "例: cd $BASEDIR/012L-sky-fish"
     exit
@@ -45,11 +45,11 @@ fi
 
 # 後にgit pullされたほう(.git/HEADのタイムスタンプが新しい方)を本番環境にする
 if [ ! `ls -l $LSOPT */.git/FETCH_HEAD | grep -E 'sky|fish' | sort -r | head -1 | grep fish | wc -l` = 0 ]; then
-    ln -nfs fish production
-    ln -nfs sky staging
+    ln -nfs fish live
+    ln -nfs sky test
     echo '「FISH。それは、さかな」 を本番環境として公開しました'
 else
-    ln -nfs sky production
-    ln -nfs fish staging
+    ln -nfs sky live
+    ln -nfs fish test
     echo '「SKY。それは、そら」 を本番環境として公開しました'
 fi

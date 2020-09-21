@@ -5,7 +5,7 @@
 #
 
 echo "----------------------------"
-echo "Skyfish update staging"
+echo "Skyfish update test"
 echo "----------------------------"
 echo
 
@@ -29,21 +29,21 @@ if [ ! `pwd | grep $BASEDIR` ]; then
         exit
 fi
 
-if [ ! -f staging/composer.json ]; then
+if [ ! -f test/composer.json ]; then
     echo "エラー: $BASEDIR のプロジェクトディレクトリで実行してください(2)。"
     echo "例: cd $BASEDIR/012L-sky-fish"
     exit
 fi
 
-cd staging
+cd test
 
 PWDP=`pwd -P`
 CURRENT=`basename $PWDP`
 echo $CURRENT
 if [ $CURRENT = 'fish' ]; then
-    echo "「FISH。それは、さかな」 を更新しています。https://staging-*.***.** でご確認ください"
+    echo "「FISH。それは、さかな」 を更新しています。https://test-*.***.** でご確認ください"
 else
-    echo "「SKY。それは、そら」 を更新しています。https://staging-*.***.** でご確認ください"
+    echo "「SKY。それは、そら」 を更新しています。https://test-*.***.** でご確認ください"
 fi
 
 
