@@ -185,10 +185,15 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
 
 chmod +x *.sh
+chmod +x *.py
 cd -
 
 
 echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
+
+
+
+* * * * * cd /var/www/production/129L-talk-v3/live && /home/ec2-user/bin >> /dev/null 2>&1
 
 
 # 以下手動

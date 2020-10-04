@@ -161,18 +161,21 @@ def abort(msg):
     exit(1)
 
 def report_exit():
-    log_write(response['message'])
+    log_write(response['message'], True)
     put_result()
     exit(0)
 
-def log_write(msg):
+def log_write(msg, detail = False):
     my_mkdir(LOG_FILE)
 
     with open(LOG_FILE, mode='a') as f:
         dt_now = datetime.datetime.now()
         dt_str = dt_now.strftime('%Y/%m/%d %H:%M:%S')
         response_str = json.dumps(response)
-        f.write(f"{dt_str}: {msg} : {response_str}\n")
+        if (detail):
+            f.write(f"{dt_str}: {msg} : {response_str}\n")
+        else:
+            f.write(f"{dt_str}: {msg}\n")
 
 def has_app(app_code):
     dir = f"/var/www/production/{app_code}"
@@ -211,7 +214,8 @@ def get_command():
     result = http_call(api_url, headers)
 
     if not result:
-        abort("api call return empty.")
+        log_write(f"api return empty.")
+        exit(0)
 
     if '{' not in result:
         abort("corrupted reply JSON")
