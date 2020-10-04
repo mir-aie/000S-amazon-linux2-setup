@@ -50,6 +50,9 @@ fi
 echo "git pull"
 git pull
 
+touch storage/logs/laravel.log
+chmod -R a+w storage
+
 read -p "composer install を実行しますか？ (y/N): " yn
 if [ "`echo $yn | grep -i Y`" ]; then
     composer install

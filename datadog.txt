@@ -1,0 +1,31 @@
+sudo su --login ec2-user
+mkdir -p download
+cd download
+curl -O https://s3.amazonaws.com/yum.datadoghq.com/stable/6/x86_64/datadog-agent-6.22.1-1.x86_64.rpm
+sudo yum localinstall -y datadog-agent-6.22.1-1.x86_64.rpm
+
+
+sudo yum list installed | grep datadog
+
+prd-hmpf-ec2-cms-01
+prd-hmpf-ec2-odpf-01
+prd-hmpf-ec2-odpf-02
+prd-hmpf-ec2-odpf-03
+prd-hmpf-ec2-odpf-04
+prd-hmpf-ec2-web-01
+prd-hmpf-ec2-web-02
+prd-hmpf-ec2-web-03
+prd-hmpf-ec2-web-04
+
+==================================
+https://pre-www.hamamatsu.odpf.net
+https://check-odpf.hamamatsu.odpf.net
+https://check-city.hamamatsu.odpf.net
+https://check-cms.hamamatsu.odpf.net
+https://odpf.hamamatsu.odpf.net
+https://cache.hamamatsu.odpf.net
+https://static.hamamatsu.odpf.net/test.jpg
+https://city.hamamatsu.odpf.net
+==================================
+
+cms.city.hamamatsu.shizuoka.jp
