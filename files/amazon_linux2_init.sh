@@ -64,15 +64,6 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 nvm install node
 node -v
 
-echo 'セキュリティパッチを自動適用...'
-sudo yum install yum-cron -y
-sudo cp /etc/yum/yum-cron.conf /etc/yum/yum-cron.conf.backup
-sudo sed -i "s/^update_cmd.*$/update_cmd = security/g" /etc/yum/yum-cron.conf
-sudo sed -i "s/^apply_updates.*$/apply_updates = yes/g" /etc/yum/yum-cron.conf
-diff /etc/yum/yum-cron.conf.backup /etc/yum/yum-cron.conf
-sudo systemctl start yum-cron
-sudo systemctl enable yum-cron
-sudo systemctl status yum-cron
 
 #echo 'my-userを作成...'
 #sudo adduser my-user
