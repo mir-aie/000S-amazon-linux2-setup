@@ -46,11 +46,11 @@ def main(argvs):
     if (int(finished_request_id) >= int(request_id)):
         #get_git_revision(app_code)
         #abort(f"request {request_id} already done")
-        log_write(f"finished_request_id : {finished_request_id}")
+        #log_write(f"finished_request_id : {finished_request_id}")
         exit(0)
 
     if not has_app(app_code):
-        log_write(f"not having app : {app_code}")
+        #log_write(f"not having app : {app_code}")
         exit(0)
 
     if type == 'update':
@@ -74,11 +74,23 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/git pull"
     result1 = run_cmd(cmd.split())
 
+    cmd = "/usr/local/bin/composer install"
+    result4 = run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan optimize:clear"
+    result2 = run_cmd(cmd.split())
+
     cmd = "/usr/bin/php artisan config:cache"
     result2 = run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan route:cache"
     result3 = run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan view:cache"
+    result4 = run_cmd(cmd.split())
+
+    cmd = "/usr/local/bin/composer dump-autoload --optimize"
+    result4 = run_cmd(cmd.split())
 
     response['message'] = 'Update OK'
 
@@ -214,7 +226,7 @@ def get_command():
     result = http_call(api_url, headers)
 
     if not result:
-        log_write(f"api return empty.")
+        #log_write(f"api return empty.")
         exit(0)
 
     if '{' not in result:
