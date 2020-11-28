@@ -123,3 +123,6 @@ cd -
 
 
 echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
+
+sudo yum -y install python-pip
+sudo pip install boto
