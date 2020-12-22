@@ -59,6 +59,9 @@ def main(argvs):
     elif type == 'deploy':
         exec_deploy(app_code)
 
+    elif type == 'rollback':
+        exec_rollback(app_code)
+
     git_revision = get_git_revision(app_code)
 
     save_finished_request_id()
@@ -75,22 +78,31 @@ def exec_update_test(app_code):
     result1 = run_cmd(cmd.split())
 
     cmd = "/usr/local/bin/composer install"
-    result4 = run_cmd(cmd.split())
+    result2 = run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
-    result2 = run_cmd(cmd.split())
-
-    cmd = "/usr/bin/php artisan config:cache"
-    result2 = run_cmd(cmd.split())
-
-    cmd = "/usr/bin/php artisan route:cache"
     result3 = run_cmd(cmd.split())
 
-    cmd = "/usr/bin/php artisan view:cache"
+    cmd = "/usr/bin/php artisan config:cache"
     result4 = run_cmd(cmd.split())
 
+    cmd = "/usr/bin/php artisan route:cache"
+    result5 = run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan view:cache"
+    result6 = run_cmd(cmd.split())
+
     cmd = "/usr/local/bin/composer dump-autoload --optimize"
-    result4 = run_cmd(cmd.split())
+    result7 = run_cmd(cmd.split())
+
+    cmd = "sudo /usr/local/bin/supervisorctl restart"
+    result8 = run_cmd(cmd.split())
+
+    cmd = "touch storage/logs/laravel.log"
+    result9 = run_cmd(cmd.split())
+
+    cmd = "sudo /bin/chmod -R a+w storage"
+    result10 = run_cmd(cmd.split())
 
     response['message'] = 'Update OK'
 
@@ -127,6 +139,40 @@ def exec_deploy(app_code):
         #print (f"fish goes live")
 
     response['message'] = 'Deploy OK'
+
+def exec_rollback(app_code):
+    global response;
+
+    tgt_dir = f"/var/www/production/{app_code}"
+    os.chdir(tgt_dir)
+
+    cmd = "ls --full-time sky/.git/FETCH_HEAD"
+    result_sky = run_cmd(cmd.split())
+
+    cmd = "ls --full-time fish/.git/FETCH_HEAD"
+    result_fish = run_cmd(cmd.split())
+
+    #print (f"sky  = {result_sky}" )
+    #print (f"fish = {result_fish}" )
+
+    if (result_sky < result_fish):
+        cmd = "ln -nfs sky live"
+        run_cmd(cmd.split())
+
+        cmd = "ln -nfs fish test"
+        run_cmd(cmd.split())
+
+        #print (f"sky goes live")
+    else:
+        cmd = "ln -nfs fish live"
+        run_cmd(cmd.split())
+
+        cmd = "ln -nfs sky test"
+        run_cmd(cmd.split())
+
+        #print (f"fish goes live")
+
+    response['message'] = 'Rollback OK'
 
 def get_git_revision(app_code):
 

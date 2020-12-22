@@ -1,0 +1,19 @@
+tar czf dd2.tar.gz dd2
+
+cd /tmp
+curl -O https://miraie-public.s3-ap-northeast-1.amazonaws.com/tmp/2012/dd2.tar.gz
+tar xzf dd2.tar.gz
+#	cd dd2/01_prd-hmpf-ec2-cms-01
+#	cd dd2/06_prd-hmpf-ec2-odpf-01
+#	cd dd2/07_prd-hmpf-ec2-odpf-02
+#	cd dd2/08_prd-hmpf-ec2-odpf-03
+#	cd dd2/09_prd-hmpf-ec2-odpf-04
+#	cd dd2/02_prd-hmpf-ec2-web-01
+#	cd dd2/03_prd-hmpf-ec2-web-02
+#	cd dd2/04_prd-hmpf-ec2-web-03
+cd dd2/05_prd-hmpf-ec2-web-04
+
+sudo cp -rf datadog-agent /etc
+sudo service datadog-agent restart
+sudo service datadog-agent status
+

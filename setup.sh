@@ -27,7 +27,7 @@ sudo su --login ec2-user
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-# export NICKNAME=koecyumon-2a
+export NICKNAME=koecyumon-2a
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -152,5 +152,6 @@ sudo reboot -n
 #echo 'chmod 600 ~my-user/.ssh/config'
 #echo 'chmod 600 ~ec2-user/.ssh/config'
 
-
+# ffmpeg
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/ffmpeg
 
