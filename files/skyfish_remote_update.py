@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# lastupdate: 2020-12-26 12:51 obata@miraie
 
 import sys
 import json
@@ -10,12 +11,17 @@ import argparse
 import socket
 import urllib.request
 import urllib.parse
+import shutil
+import time
+import hashlib
+
 from urllib.error import URLError, HTTPError
 import datetime
 
 AWS_INSTANCE_ID_GET_URL = 'http://169.254.169.254/latest/meta-data/instance-id/'
 FINISHED_REQUEST_FILE = '/home/ec2-user/deploy/remote_deploy_finished_request_id.txt'
 LOG_FILE = '/home/ec2-user/deploy/remote_deploy_log.txt'
+API_HASH_SEED = 'm1ra1eAp1Dep10y'
 
 response = {}
 instance_id = ''
@@ -77,32 +83,34 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/git pull"
     result1 = run_cmd(cmd.split())
 
-    cmd = "/usr/local/bin/composer install"
-    result2 = run_cmd(cmd.split())
+    result2 = update_env(app_code)
 
-    cmd = "/usr/bin/php artisan optimize:clear"
+    cmd = "/usr/local/bin/composer install"
     result3 = run_cmd(cmd.split())
 
-    cmd = "/usr/bin/php artisan config:cache"
+    cmd = "/usr/bin/php artisan optimize:clear"
     result4 = run_cmd(cmd.split())
 
-    cmd = "/usr/bin/php artisan route:cache"
+    cmd = "/usr/bin/php artisan config:cache"
     result5 = run_cmd(cmd.split())
 
-    cmd = "/usr/bin/php artisan view:cache"
+    cmd = "/usr/bin/php artisan route:cache"
     result6 = run_cmd(cmd.split())
 
-    cmd = "/usr/local/bin/composer dump-autoload --optimize"
+    cmd = "/usr/bin/php artisan view:cache"
     result7 = run_cmd(cmd.split())
 
-    cmd = "sudo /usr/local/bin/supervisorctl restart"
+    cmd = "/usr/local/bin/composer dump-autoload --optimize"
     result8 = run_cmd(cmd.split())
 
-    cmd = "touch storage/logs/laravel.log"
+    cmd = "sudo /usr/local/bin/supervisorctl restart"
     result9 = run_cmd(cmd.split())
 
-    cmd = "sudo /bin/chmod -R a+w storage"
+    cmd = "touch storage/logs/laravel.log"
     result10 = run_cmd(cmd.split())
+
+    cmd = "sudo /bin/chmod -R a+w storage"
+    result11 = run_cmd(cmd.split())
 
     response['message'] = 'Update OK'
 
@@ -399,6 +407,60 @@ def init_response():
     }
 
     return response
+
+def update_env(app_code):
+
+    # Make hash for authorization
+    request_time = int(time.time())
+    original = f"{request_time}{API_HASH_SEED}{app_code}".encode('utf8')
+    print (f"update_env() original {original}")
+    request_hash = hashlib.sha256(original).hexdigest()
+
+    # call deploy api to get latest production env.
+    api_url = f"https://deploy.pub-sec.net/api/get_env/{app_code}?rh={request_hash}&rt={request_time}"
+
+    headers = {
+        "Content-Type" : "application/json"
+    }
+
+    result = http_call(api_url, headers)
+
+    if not result:
+        #log_write(f"api return empty.")
+        abort("update_env return empty")
+
+    if '{' not in result:
+        abort("update_env return corrupted JSON")
+
+    cmd = json.loads(result)
+
+    if ('success' not in cmd):
+        abort("update_env return did not contain success")
+
+    if ('production_env' not in cmd):
+        abort("update_env return did not contain production_env")
+
+    production_env = cmd['production_env']
+
+    # Check if env file contains proper entry
+
+    if ('APP_NAME' not in production_env):
+        abort("update_env production_env contain no APP_NAME.")
+
+    # backup current env file
+    tgt_path = f"/var/www/production/{app_code}/test/.env"
+
+    if os.path.exists(tgt_path):
+        # Make backup
+        dt_now = datetime.datetime.now()
+        dt_str = dt_now.strftime('-%Y%m%d-%H%M%S')
+        backup_path = tgt_path + dt_str
+        shutil.copyfile(tgt_path, backup_path)
+
+    # Overwrite env file in test .env
+    with open(tgt_path, mode='w') as f:
+        f.write(production_env)
+        print (f"overwrite {tgt_path}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
