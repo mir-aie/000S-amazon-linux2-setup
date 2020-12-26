@@ -85,7 +85,7 @@ def exec_update_test(app_code):
 
     result2 = update_env(app_code)
 
-    cmd = "/usr/local/bin/composer install"
+    cmd = "/usr/local/bin/composer install --no-dev --optimize-autoloader"
     result3 = run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"

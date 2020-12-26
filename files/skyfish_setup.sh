@@ -55,18 +55,20 @@ cd $DIR
 
 git clone $GIT_SSH sky
 cd sky
-composer install
+composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
+./skyfish_setup_env.py $BASENAME
 cd -
 
 git clone $GIT_SSH fish
 cd fish
-composer install
+composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
+./skyfish_setup_env.py $BASENAME
 cd -
 
 ln -s sky live
