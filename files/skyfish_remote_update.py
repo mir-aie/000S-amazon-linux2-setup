@@ -427,25 +427,25 @@ def update_env(app_code):
 
     if not result:
         #log_write(f"api return empty.")
-        abort("update_env return empty")
+        return
 
     if '{' not in result:
-        abort("update_env return corrupted JSON")
+        return
 
     cmd = json.loads(result)
 
     if ('success' not in cmd):
-        abort("update_env return did not contain success")
+        return
 
     if ('production_env' not in cmd):
-        abort("update_env return did not contain production_env")
+        return
 
     production_env = cmd['production_env']
 
     # Check if env file contains proper entry
 
     if ('APP_NAME' not in production_env):
-        abort("update_env production_env contain no APP_NAME.")
+        return
 
     # backup current env file
     tgt_path = f"/var/www/production/{app_code}/test/.env"
