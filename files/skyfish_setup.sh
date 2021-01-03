@@ -27,13 +27,8 @@ if [ ! `whoami` = $EXEC_USER ]; then
     exit
 fi
 
-read -p "skyfish 環境を初期セットアップします？ (y/N): " yn
-case "$yn" in [yY]*) ;; *) echo "abort." ; exit ;; esac
-
+echo "skyfish 環境を初期セットアップします"
 read -p "プロジェクトコードはなんですか (例: 012L-sky-fish): " BASENAME
-read -p "'$BASENAME' で間違いないですか？ (y/N): " yn
-case "$yn" in [yY]*) ;; *) echo "abort." ; exit ;; esac
-
 DIR=$BASEDIR$BASENAME
 
 if [ -d $DIR ]; then
@@ -42,11 +37,12 @@ if [ -d $DIR ]; then
 fi
 
 read -p "webアクセス用のドメインはなんですか(例: www.mir-ai.net): " DOMAIN
-read -p "'$DOMAIN' で間違いないですか？ (y/N): " yn
-case "$yn" in [yY]*) ;; *) echo "abort." ; exit ;; esac
-
 GIT_SSH="git@github.com:mir-aie/$BASENAME.git"
-read -p "gitリポジトリは $GIT_SSH でよいですか？ (y/N): " yn
+
+echo "プロジェクトコード: $BASENAME"
+echo "Webアクセスドメイン: $DOMAIN"
+echo "gitリポジトリ: $GIT_SSH"
+read -p "よろしいですか？ (y/N): " yn
 case "$yn" in [yY]*) ;; *) echo "abort." ; exit ;; esac
 
 sudo mkdir -p $DIR
@@ -59,7 +55,7 @@ composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
-./skyfish_setup_env.py $BASENAME
+/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 cd -
 
 git clone $GIT_SSH fish
@@ -68,7 +64,7 @@ composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
-./skyfish_setup_env.py $BASENAME
+/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 cd -
 
 ln -s sky live
@@ -93,7 +89,6 @@ echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
 DOMAIN_TEST="test-$DOMAIN"
 
-echo ".env を作成してください"
 echo "$DOMAIN を作成してください"
 echo "$DOMAIN_TEST を作成してください"
 echo "sudo service httpd configtest を実行してください"

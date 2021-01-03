@@ -55,7 +55,7 @@ echo 'git用のsshの登録'
 ssh-keygen -t rsa
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name hmpf-01-stg
+git config --global user.name prd-hmpf-ec2-odpf-01
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -127,6 +127,14 @@ sudo vi /etc/crontab
 echo 'Reboot'
 sudo reboot -n
 
+
+cd bin
+./skyfish_setup.sh
+
+
+161L-mir-admin-v1
+admin.hamamatsu.odpf.net
+git@github.com:mir-aie/161L-mir-admin-v1.git
 
 #/etc/supervisord/conf.d/001L-salvatore-laravel.conf
 #[program:001L-salvatore-laravel-queue]
