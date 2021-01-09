@@ -87,6 +87,7 @@ sudo mv laravel /etc/logrotate.d/laravel.conf
 sudo chown root /etc/logrotate.d/laravel.conf
 sudo chmod 0644 /etc/logrotate.d/laravel.conf
 
+
 #https://chariosan.com/2019/11/10/supervisor4_al2/
 echo 'install supervisord'
 sudo yum install -y python3
