@@ -83,7 +83,9 @@ sudo chmod a+w /var/www/production
 
 echo 'laravel logローテート設定...'
 curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
-sudo mv laravel /etc/logrotate.d/laravel
+sudo mv laravel /etc/logrotate.d/laravel.conf
+sudo chown root /etc/logrotate.d/laravel.conf
+sudo chmod 0644 /etc/logrotate.d/laravel.conf
 
 #https://chariosan.com/2019/11/10/supervisor4_al2/
 echo 'install supervisord'

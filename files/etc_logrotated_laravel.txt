@@ -1,8 +1,9 @@
-/var/www/production/*/storage/logs/laravel.log {
+/var/www/production/*/*/storage/logs/laravel.log {
     missingok
     daily
+    dateext
     rotate 200
     delaycompress
     su apache apache
-    create 0666 apache apache
+    copytruncate
 }
