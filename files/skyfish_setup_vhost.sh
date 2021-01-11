@@ -14,7 +14,7 @@ EXEC_USER=ec2-user
 SED=sed
 PWD=`pwd`
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
   echo "usage: $0 BASENAME DOMAIN" 1>&2
   echo "ex: $0 163L-mir-proc-v1 proc.hamamatsu.odpf.net" 1>&2
   exit 1
@@ -32,7 +32,7 @@ if [ ! `whoami` = $EXEC_USER ]; then
 fi
 
 BASENAME=$1
-BASENAME=$2
+DOMAIN=$2
 
 echo "プロジェクトコード: $BASENAME"
 echo "Webアクセスドメイン: $DOMAIN"
@@ -46,14 +46,16 @@ $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf
 $SED -i "s/ServerAlias /ServerAlias loopback-/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
-echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
+echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf"
 
 STAGE=test
 curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf
-$SED -i "s/www\./test\./" vhost.conf
+#$SED -i "s/www\./test\./" vhost.conf
+$SED -i "s/ServerName /ServerName test-/" vhost.conf
+$SED -i "s/ServerAlias /ServerAlias test-/" vhost.conf
 $SED -i "s/ServerAlias /ServerAlias loopback-/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
-echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
+echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf"

@@ -119,6 +119,7 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_vhost.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
 
 chmod +x *.sh
