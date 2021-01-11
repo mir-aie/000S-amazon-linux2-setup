@@ -1,5 +1,6 @@
 <VirtualHost *:80>
   ServerName DOMAIN
+  ServerAlias DOMAIN
   DocumentRoot /var/www/production/BASENAME/STAGE/public
   AllowEncodedSlashes On
   CustomLog logs/BASENAME-STAGE.access.log combined
