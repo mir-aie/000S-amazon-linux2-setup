@@ -112,6 +112,9 @@ def exec_update_test(app_code):
     cmd = "sudo /bin/chmod -R a+w storage"
     result11 = run_cmd(cmd.split())
 
+    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+    result12 = run_cmd(cmd.split())
+
     response['message'] = 'Update OK'
 
 def exec_deploy(app_code):

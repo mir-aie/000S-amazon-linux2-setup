@@ -27,7 +27,7 @@ sudo su --login ec2-user
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=koecyumon-2a
+export NICKNAME=prd1-pubsec
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -53,9 +53,10 @@ echo '以下手動'
 
 echo 'git用のsshの登録'
 ssh-keygen -t rsa
+----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name prd-hmpf-ec2-odpf-01
+git config --global user.name prd1-pubsec
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -123,6 +124,8 @@ echo 'CloudWatchカスタムメトリクスをcrontabに追加'
 sudo vi /etc/crontab
 # */5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1
 
+echo 'Google Vision API用設定情報CONFIGファイルを各サーバのローカルにコピー'
+#cp ODPF-hamamatsu-e3ef389d60ae.json $HOME/.config/gcloud/application_default_credentials.json
 
 echo 'Reboot'
 sudo reboot -n
@@ -162,4 +165,11 @@ git@github.com:mir-aie/161L-mir-admin-v1.git
 
 # ffmpeg
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/ffmpeg
+chmod a+x ffmpeg
 
+hamamatsu.odpf.net
+NS
+ns-1324.awsdns-37.org.
+ns-1949.awsdns-51.co.uk.
+ns-918.awsdns-50.net.
+ns-260.awsdns-32.com.
