@@ -38,11 +38,10 @@ def main(argvs):
     response['proc_num']  = get_proc_num()
     response['top_proc']  = get_top_proc()
 
-    print (response)
-
+    #print (response)
 
     # 各サーバがAPIを叩くタイミングをずらす
-    time.sleep(3 + random.random() * 50)
+    time.sleep(3 + random.random() * 30)
 
     put_host_status()
 
@@ -66,7 +65,7 @@ def get_free_disk():
         line = line.replace('%', '')
         # ファイルシス   1K-ブロック     使用   使用可 使用% マウント位置
         # /dev/nvme0n1p1    31444972 10816404 20628568   35% /
-        f, b, u, a, free_disk, m = line.split()
+        f, b, u, a, free_disk, *m = line.split()
 
         if free_disk.isnumeric():
             return free_disk
@@ -97,14 +96,18 @@ def get_proc_num():
     return line_cnt - 1
 
 def get_top_proc():
-    cmd_results = run_cmd("/bin/top -c -b -n 1".split())
+    cmd_results = run_cmd("/bin/top -c -b -n 1 -w 120".split())
     lines = cmd_results.split("\n")
     if len(lines) >= 8:
-        #     1 root      20   0  125452   3256   1872 S   0.0  0.1   2:53.78 /usr/lib/systemd/systemd --switched-root --syst+
-        pid, user, pr, ni, virt, res, shr, s, cpu, mem, time, *command = lines[8].split()
+        for i in range(8, len(lines)):
+            #     1 root      20   0  125452   3256   1872 S   0.0  0.1   2:53.78 /usr/lib/systemd/systemd --switched-root --syst+
+            pid, user, pr, ni, virt, res, shr, s, cpu, mem, time, *command = lines[i].split()
 
-        if float(cpu) >= 10:
-            return ' '.join(command)
+            command_full = ' '.join(command)
+
+            if float(cpu) >= 10:
+                if '-mir-' not in command_full:
+                    return command_full
 
     return ''
 
@@ -157,7 +160,7 @@ def put_host_status():
     return result
 
 def http_call_post(url, headers = {}, payload = {}):
-    #print (url)
+    print ("http_call_post", url, payload)
     #print (headers)
     #print (payload)
     request_time = int(time.time())
@@ -190,11 +193,6 @@ def http_call_post(url, headers = {}, payload = {}):
     except HTTPError as e:
         error_desc = e.read().decode("utf-8").replace("\n", "")
         log_write ("◇ERROR_RESPONSE : " + error_desc)
-
-        error_response = json.loads(error_desc)
-        status_code = get_key(error_response, 'status_code')
-        message = get_key(error_response, 'message')
-        log_write (f"SERVER ERROR: {status_code} : {message}")
 
         return {}
 
