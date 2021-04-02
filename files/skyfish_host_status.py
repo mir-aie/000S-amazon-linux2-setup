@@ -26,11 +26,21 @@ API_HASH_SEED = 'm1ra1eAp1Dep10y'
 response = {}
 instance_id = ''
 
+proc_white_lists = [
+    'php aritsan ',
+    'php /var/www/production/',
+    'php /var/www/staging/',
+    'skyfish_',
+    'python3 /home/ec2-user/',
+]
+
+
 def main(argvs):
     global instance_id
     global response
 
     response = init_response()
+    response['aws_account_id'] = get_aws_account_id()
     response['instance_id'] = get_instance_id()
     response['cpu_load']  = get_cpu_load()
     response['free_disk'] = get_free_disk()
@@ -46,6 +56,14 @@ def main(argvs):
     put_host_status()
 
     report_exit()
+
+def get_aws_account_id():
+    cmd_results = run_cmd("/usr/bin/aws sts get-caller-identity".split())
+    res = json.loads(cmd_results)
+    if 'Account' in res:
+        return res['Account']
+
+    return ''
 
 def get_cpu_load():
     cmd_results = run_cmd("/bin/uptime")
@@ -96,7 +114,9 @@ def get_proc_num():
     return line_cnt - 1
 
 def get_top_proc():
-    cmd_results = run_cmd("/bin/top -c -b -n 1 -w 120".split())
+    global proc_white_lists
+
+    cmd_results = run_cmd("/bin/top -c -b -n 1 -w 180".split())
     lines = cmd_results.split("\n")
     if len(lines) >= 8:
         for i in range(8, len(lines)):
@@ -106,7 +126,12 @@ def get_top_proc():
             command_full = ' '.join(command)
 
             if float(cpu) >= 10:
-                if '-mir-' not in command_full:
+                is_white = False
+                for white in proc_white_lists:
+                    if white in command_full:
+                        is_white = True
+
+                if not is_white:
                     return command_full
 
     return ''
@@ -240,7 +265,7 @@ def init_response():
         'free_mem'    : '',
         'proc_num'    : '',
         'message'     : '',
-        'success'     : 'N',
+        'success'     : 'Y',
     }
 
     return response
