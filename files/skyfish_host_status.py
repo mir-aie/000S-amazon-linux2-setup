@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-# lastupdate: 2021-4-2 obata@mir-ai.co.jp
+# lastupdate: 2021-04-03 obata@mir-ai.co.jp
+
+# Send host statistics (disk, mem, cpu) to miraie server
 
 import sys
 import json
@@ -53,10 +55,11 @@ def main(argvs):
     response['proc_num']  = get_proc_num()
     response['top_proc']  = get_top_proc()
 
-    #print (response)
+    sleep = 3 + random.random() * 30
+    print (f"sleep {sleep} sec. ", response)
 
     # 各サーバがAPIを叩くタイミングをずらす
-    time.sleep(3 + random.random() * 30)
+    time.sleep(sleep)
 
     put_host_status()
 
@@ -190,7 +193,6 @@ def put_host_status():
     return result
 
 def http_call_post(url, headers = {}, payload = {}):
-    print ("http_call_post", url, payload)
     #print (headers)
     #print (payload)
     request_time = int(time.time())
