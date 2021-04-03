@@ -55,7 +55,7 @@ def main(argvs):
     response['proc_num']  = get_proc_num()
     response['top_proc']  = get_top_proc()
 
-    sleep = 3 + random.random() * 30
+    sleep = 1 + random.random() * 5
     print (f"sleep {sleep} sec. ", response)
 
     # 各サーバがAPIを叩くタイミングをずらす
