@@ -34,6 +34,11 @@ proc_white_lists = [
     'python3 /home/ec2-user/',
 ]
 
+CMS_AWS="/usr/bin/aws"
+CMS_AWS2="/usr/local/bin/aws"
+
+if os.path.exists(CMS_AWS2):
+    CMS_AWS = CMS_AWS2
 
 def main(argvs):
     global instance_id
@@ -58,7 +63,7 @@ def main(argvs):
     report_exit()
 
 def get_aws_account_id():
-    cmd_results = run_cmd("/usr/bin/aws sts get-caller-identity".split())
+    cmd_results = run_cmd(f"{CMS_AWS} sts get-caller-identity".split())
     res = json.loads(cmd_results)
     if 'Account' in res:
         return res['Account']
@@ -71,9 +76,9 @@ def get_cpu_load():
         #print ("get_cpu_load", line)
         # 12:11:35 up 51 days,  4:07,  0 users,  load average: 0.00, 0.01, 0.05
         line = line.replace(',', '')
-        t, up, d, days, h, u, users, load, average, min1, min5, min15 = line.split()
-
-        return min15
+        items = line.split()
+        if len(items):
+            return items[-1]
 
     return 100
 
