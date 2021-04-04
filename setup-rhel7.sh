@@ -34,6 +34,24 @@ sudo systemctl enable httpd.service
 sudo systemctl status httpd.service
 
 
+sudo yum install -y python3
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+rm awscliv2.zip
+
+cd ~
+mkdir -p bin
+cd bin
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
+chmod +x *.py
+./skyfish_host_status.py
+
+crontab -e
+*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
+
+
 #===============================================
 
 

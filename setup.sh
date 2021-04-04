@@ -56,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name prd1-pubsec
+git config --global user.name pubsec-log-uploader
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -126,6 +126,10 @@ sudo vi /etc/crontab
 
 echo 'Google Vision API用設定情報CONFIGファイルを各サーバのローカルにコピー'
 #cp ODPF-hamamatsu-e3ef389d60ae.json $HOME/.config/gcloud/application_default_credentials.json
+
+#crontab -e
+#*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
+
 
 echo 'Reboot'
 sudo reboot -n
