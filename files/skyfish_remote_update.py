@@ -103,7 +103,8 @@ def exec_update_test(app_code):
     cmd = "/usr/local/bin/composer dump-autoload --optimize"
     result8 = run_cmd(cmd.split())
 
-    cmd = "sudo /usr/local/bin/supervisorctl reload"
+    #cmd = "sudo /usr/local/bin/supervisorctl reload"
+    cmd = "/usr/bin/php artisan queue:restart"
     result9 = run_cmd(cmd.split())
 
     cmd = "touch storage/logs/laravel.log"
