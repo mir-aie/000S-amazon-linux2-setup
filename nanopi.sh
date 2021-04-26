@@ -31,3 +31,5 @@ echo 'heartbeat' > /sys/class/leds/nanopi\:red\:pwr/trigger
 echo 'heartbeat' > /sys/class/leds/nanopi\:green\:pwr/trigger
 nanopi\:red\:status/trigger
 
+$ apt-get install bsdmainutils
+$ hexdump /sys/bus/nvmem/devices/sunxi-sid0/nvmem 

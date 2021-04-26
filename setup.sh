@@ -177,3 +177,48 @@ ns-1324.awsdns-37.org.
 ns-1949.awsdns-51.co.uk.
 ns-918.awsdns-50.net.
 ns-260.awsdns-32.com.
+
+
+SWAP
+sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+sudo chmod 600 /swapfile 
+sudo mkswap /swapfile 
+sudo swapon /swapfile 
+sudo swapon -s 
+echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+
+# mecab
+https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
+
+sudo yum update -y
+sudo yum groupinstall -y "Development Tools"
+
+wget 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE' -O mecab-0.996.tar.gz
+tar xzf mecab-0.996.tar.gz
+cd mecab-0.996
+./configure
+make
+make check
+sudo make install
+cd -
+rm -rf mecab-0.996*
+
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -a -y
+rm -rf mecab-ipadic-neologd
+
+
+sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
+
+cd ~/bin
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
+chmod a+x mecab_update_dict_neologd.sh
+
+crontab
+# 毎週火曜日と金曜日にmecabの辞書を更新
+# https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md
+00 03 * * 2,5 /home/ec2-user/bin/mecab_update_dict_neologd.sh > /dev/null 2>&1
+
+
+
+/home/ec2-user/mecab-ipadic-neologd/cron-update.log
