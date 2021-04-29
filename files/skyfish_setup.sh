@@ -128,8 +128,8 @@ echo "[migration]"
 echo "php artisan migrate"
 echo
 echo "[permission]"
-echo "chmod -R a+w $DIR/storage"
-echo "chmod -R a+w $DIR/bootstrap/cache"
+echo "chmod -R a+w $DIR/live/storage"
+echo "chmod -R a+w $DIR/live/bootstrap/cache"
 echo
 echo "[/etc/hosts]"
 echo "127.0.0.1   loopback-$DOMAIN"

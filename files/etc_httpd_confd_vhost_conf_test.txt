@@ -1,7 +1,7 @@
 <VirtualHost *:80>
   ServerName test-DOMAIN
   ServerAlias loopback-test-DOMAIN
-  DocumentRoot /var/www/produtestction/BASENAME/test/public
+  DocumentRoot /var/www/production/BASENAME/test/public
   AllowEncodedSlashes On
   CustomLog logs/BASENAME-test.access.log combined
   ErrorLog logs/BASENAME-test.error.log
