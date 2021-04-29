@@ -1,10 +1,10 @@
 #[program:BASENAME-queue]
 #process_name=%(program_name)s_%(process_num)02d
-#directory=DIR/live
+#directory=/var/www/production/BASENAME/live
 #command=/usr/bin/php artisan queue:work
 #autostart=true
 #autorestart=true
 #user=ec2-user
 #numprocs=3
 #redirect_stderr=true
-#stdout_logfile=DIR/live/storage/logs/queue-worker.log
+#stdout_logfile=/var/www/production/BASENAME/live/storage/logs/queue-worker.log

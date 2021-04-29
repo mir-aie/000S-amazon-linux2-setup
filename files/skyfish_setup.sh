@@ -95,7 +95,6 @@ STAGE=live
 curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_live.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
-$SED -i "s/ServerAlias /ServerAlias loopback-/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
@@ -103,7 +102,6 @@ STAGE=test
 curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_test.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
-$SED -i "s/ServerAlias /ServerAlias loopback-/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
@@ -112,22 +110,20 @@ DOMAIN_TEST="test-$DOMAIN"
 # supervisord / queue worker
 curl -o supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
-$SED -i "s/DIR/$DIR/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 
 # mysql
-DB_HOST=`grep DB_HOST= $DIR/.env | cut -d = -f 2`
-DB_DATABASE=`grep DB_DATABASE= $DIR/.env | cut -d = -f 2`
-DB_USERNAME=`grep DB_USERNAME= $DIR/.env | cut -d = -f 2`
-DB_PASSWORD=`grep DB_PASSWORD= $DIR/.env | cut -d = -f 2`
+DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
+DB_DATABASE=`grep DB_DATABASE= $DIR/live/.env | cut -d = -f 2`
+DB_USERNAME=`grep DB_USERNAME= $DIR/live/.env | cut -d = -f 2`
+DB_PASSWORD=`grep DB_PASSWORD= $DIR/live/.env | cut -d = -f 2`
 
 echo "[mysql]"
-echo "mysql -u $DB_USERNAME -p -h $DB_HOST"
-echo "$DB_PASSWORD"
+echo "DB_HOST     : $DB_HOST"
+echo "DB_DATABASE : $DB_DATABASE"
+echo "DB_USERNAME : $DB_USERNAME"
 echo
-echo "create database $DB_DATABASE default charset utf8mb4;"
-echo 
 echo "[migration]"
 echo "php artisan migrate"
 echo
@@ -141,7 +137,7 @@ echo "127.0.0.1   test-loopback-$DOMAIN"
 echo
 echo "[Route 53]"
 echo "$DOMAIN"
-echo "$DOMAIN_TEST"
+echo "test-$DOMAIN"
 echo
 echo "[vhost]"
 echo "cd /etc/httpd/conf.d/"
@@ -154,4 +150,4 @@ echo "[crontab]"
 echo "* * * * * /usr/bin/php $DIR/live/artisan schedule:run >> /dev/null 2>&1"
 echo 
 echo "[supervisord / queue]"
-echo "cat "
+echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
