@@ -1,6 +1,6 @@
 <VirtualHost *:80>
   ServerName DOMAIN
-  ServerAlias loopback-DOMAIN
+  ServerAlias DOMAIN
   DocumentRoot /var/www/production/BASENAME/live/public
   AllowEncodedSlashes On
   CustomLog logs/BASENAME-live.access.log combined
