@@ -2,7 +2,8 @@
 
 PATH=$PATH:/usr/local/bin
 
-cd /home/ec2-user/mecab
+cd /home/ec2-user/mecab-ipadic-neologd
 
-./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -y -u -p /home/ec2-user/mecab/dic/mecab-ipadic-neologd > cron-update.log 2>
-&1
+date >> cron-update.log
+./bin/install-mecab-ipadic-neologd -n -y >> cron-update.log 2 >&1
+date >> cron-update.log

@@ -56,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name pubsec-log-uploader
+git config --global user.name prd2-miraie-1d
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -84,7 +84,7 @@ echo 'mariadbをインストール...'
 sudo amazon-linux-extras disable php7.4
 sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
 sudo yum install -y mariadb-server
-sudo sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
+sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'mariadbの起動設定'
 sudo systemctl start mariadb
@@ -204,9 +204,7 @@ cd -
 rm -rf mecab-0.996*
 
 git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
-./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -a -y
-rm -rf mecab-ipadic-neologd
-
+./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -y
 
 sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
 
@@ -218,6 +216,20 @@ crontab
 # 毎週火曜日と金曜日にmecabの辞書を更新
 # https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md
 00 03 * * 2,5 /home/ec2-user/bin/mecab_update_dict_neologd.sh > /dev/null 2>&1
+
+
+# Polly server daemonize
+sudo vi /etc/supervisord/conf.d/196L-polly-speech-v2.conf
+[program:196L-polly-speech-v2]
+process_name=%(program_name)s_%(process_num)02d
+directory=/var/www/production/196L-polly-speech-v2
+command=/var/www/production/196L-polly-speech-v2/polly-speech-server.py
+autostart=true
+autorestart=true
+user=ec2-user
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2.log
 
 
 

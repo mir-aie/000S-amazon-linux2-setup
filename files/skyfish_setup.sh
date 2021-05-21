@@ -31,16 +31,17 @@ if [ ! `whoami` = $EXEC_USER ]; then
     exit
 fi
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
   echo "これは、新規の本番Laravelプロジェクトをサーバ環境にインストールするスクリプトです。"
-  echo "例： ./sykfish_setup.sh 180L-mir-mms-isehara-v1 mms-isehara.cityj.net"
-  echo "                       ↑プロジェクトコード         ↑本番URL"
-  echo "deploy に .env が設定されている必要があります"
+  echo "例： ./sykfish_setup.sh 200L-00-core-area-alert-v1 200L-01-hamamatsu-alert-v1 alert.hamamatsu.odpf.net"
+  echo "                       ↑GITコード                  ↑プロジェクトコード             ↑本番URL"
+  echo "deploy にプロジェクトコードに対応した .env が設定されている必要があります"
   exit 1
 fi
 
-BASENAME=$1
-DOMAIN=$2
+GITNAME=$1
+BASENAME=$2
+DOMAIN=$3
 
 DIR=$BASEDIR$BASENAME
 
@@ -49,8 +50,9 @@ if [ -d $DIR ]; then
     exit
 fi
 
-GIT_SSH="git@github.com:mir-aie/$BASENAME.git"
+GIT_SSH="git@github.com:mir-aie/$GITNAME.git"
 
+echo "GITコード: $GITNAME"
 echo "プロジェクトコード: $BASENAME"
 echo "Webアクセスドメイン: $DOMAIN"
 echo "gitリポジトリ: $GIT_SSH"

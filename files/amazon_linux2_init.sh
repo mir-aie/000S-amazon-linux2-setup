@@ -134,5 +134,8 @@ echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_p
 sudo yum -y install python-pip
 sudo pip install boto
 
+sudo pip3 install boto3
+
+
 /home/ec2-user/bin/skyfish_host_status.py
 
