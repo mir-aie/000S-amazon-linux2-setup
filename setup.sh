@@ -27,7 +27,7 @@ sudo su --login ec2-user
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=prd1-pubsec
+export NICKNAME=prd-post-ec2-01
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -56,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name prd2-miraie-1d
+git config --global user.name post-ec2
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -231,6 +231,7 @@ numprocs=1
 redirect_stderr=true
 stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2.log
 
-
+*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
+* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
 
 /home/ec2-user/mecab-ipadic-neologd/cron-update.log

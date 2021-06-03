@@ -28,6 +28,10 @@ sudo mv security.conf /etc/httpd/conf.d/
 curl -o vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_000.txt
 sudo mv vhost-000.conf /etc/httpd/conf.d/
 
+sudo cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.org
+sudo sed -i -e "s/{User-Agent}i\\\\\"\" combined$/{User-Agent}i\\\\\" %{X-Forwarded-For}i\" combined/" /etc/httpd/conf/httpd.conf
+diff /etc/httpd/conf/httpd.conf.org  /etc/httpd/conf/httpd.conf
+
 # Safariのhttp2エラーを回避
 sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
 # KeepAlive On
