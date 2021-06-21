@@ -153,3 +153,6 @@ echo "* * * * * /usr/bin/php $DIR/live/artisan schedule:run >> /dev/null 2>&1"
 echo 
 echo "[supervisord / queue]"
 echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
+echo "sudo /usr/local/bin/supervisorctl status"
+echo "sudo /usr/local/bin/supervisorctl reload"
+echo "sudo /usr/local/bin/supervisorctl status"
