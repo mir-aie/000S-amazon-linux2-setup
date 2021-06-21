@@ -66,7 +66,6 @@ git config --global user.email ss@mir-ai.co.jp
 ssh -T git@github.com
 
 ## Add crontab
-* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
 
 echo 'セキュリティパッチを自動適用...'
 sudo yum install yum-cron -y
@@ -134,7 +133,7 @@ echo 'Google Vision API用設定情報CONFIGファイルを各サーバのロー
 echo 'Reboot'
 sudo reboot -n
 
-
+cd
 cd bin
 ./skyfish_setup.sh
 
@@ -233,5 +232,6 @@ stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2
 
 */10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
 * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+#* * * * * /usr/bin/php /var/www/production/146L-poskuma-v2/live/artisan schedule:run >> /dev/null 2>&1
 
 /home/ec2-user/mecab-ipadic-neologd/cron-update.log
