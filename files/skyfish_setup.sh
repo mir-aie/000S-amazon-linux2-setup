@@ -135,7 +135,7 @@ echo "chmod -R a+w $DIR/live/bootstrap/cache"
 echo
 echo "[/etc/hosts]"
 echo "127.0.0.1   loopback-$DOMAIN"
-echo "127.0.0.1   test-loopback-$DOMAIN"
+echo "127.0.0.1   loopback-test-$DOMAIN"
 echo
 echo "[Route 53]"
 echo "$DOMAIN"
