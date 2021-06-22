@@ -103,18 +103,20 @@ def exec_update_test(app_code):
     cmd = "/usr/local/bin/composer dump-autoload --optimize"
     result8 = run_cmd(cmd.split())
 
-    #cmd = "sudo /usr/local/bin/supervisorctl reload"
-    cmd = "/usr/bin/php artisan queue:restart"
+    cmd = "sudo /usr/local/bin/supervisorctl reload"
     result9 = run_cmd(cmd.split())
 
-    cmd = "touch storage/logs/laravel.log"
+    cmd = "/usr/bin/php artisan queue:restart"
     result10 = run_cmd(cmd.split())
 
-    cmd = "sudo /bin/chmod -R a+w storage"
+    cmd = "touch storage/logs/laravel.log"
     result11 = run_cmd(cmd.split())
 
-    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+    cmd = "sudo /bin/chmod -R a+w storage"
     result12 = run_cmd(cmd.split())
+
+    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+    result13 = run_cmd(cmd.split())
 
     response['message'] = 'Update OK'
 
