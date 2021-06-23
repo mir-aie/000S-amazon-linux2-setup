@@ -152,6 +152,12 @@ def exec_deploy(app_code):
 
         #print (f"fish goes live")
 
+    tgt_dir = f"/var/www/production/{app_code}/live"
+    os.chdir(tgt_dir)
+
+    cmd = "/usr/bin/php artisan queue:restart"
+    result10 = run_cmd(cmd.split())
+
     response['message'] = 'Deploy OK'
 
 def exec_rollback(app_code):
