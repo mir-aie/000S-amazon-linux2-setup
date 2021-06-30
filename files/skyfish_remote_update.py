@@ -128,9 +128,11 @@ def exec_deploy(app_code):
 
     cmd = "ls --full-time sky/.git/FETCH_HEAD"
     result_sky = run_cmd(cmd.split())
+    result_sky = get_date_from_ls_output(result_sky)
 
     cmd = "ls --full-time fish/.git/FETCH_HEAD"
     result_fish = run_cmd(cmd.split())
+    result_fish = get_date_from_ls_output(result_fish)
 
     #print (f"sky  = {result_sky}" )
     #print (f"fish = {result_fish}" )
@@ -168,9 +170,11 @@ def exec_rollback(app_code):
 
     cmd = "ls --full-time sky/.git/FETCH_HEAD"
     result_sky = run_cmd(cmd.split())
+    result_sky = get_date_from_ls_output(result_sky)
 
     cmd = "ls --full-time fish/.git/FETCH_HEAD"
     result_fish = run_cmd(cmd.split())
+    result_fish = get_date_from_ls_output(result_fish)
 
     #print (f"sky  = {result_sky}" )
     #print (f"fish = {result_fish}" )
@@ -193,6 +197,13 @@ def exec_rollback(app_code):
         #print (f"fish goes live")
 
     response['message'] = 'Rollback OK'
+
+def get_date_from_ls_output(ls_output):
+    # -rw-r--r-- 1 ec2-user ec2-user 2458 2021-06-30 09:10:04.696822255 +0900 sky/.git/FETCH_HEAD
+    l_splited = ls_output.split()
+
+    # 2021-06-30 09:10:04.696822255 +0900 sky/.git/FETCH_HEAD
+    return ' '.join(l_splited[5:])
 
 def get_git_revision(app_code):
 
