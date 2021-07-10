@@ -1,6 +1,6 @@
 #[program:BASENAME-queue]
 #process_name=%(program_name)s_%(process_num)02d
-#directory=/var/www/production/BASENAME/live
+#directory=/var/www/production/BASENAME/live/
 #command=/usr/bin/php artisan queue:work
 #autostart=true
 #autorestart=true
