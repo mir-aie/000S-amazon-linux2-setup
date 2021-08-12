@@ -2,7 +2,7 @@
     missingok
     daily
     dateext
-    rotate 200
+    rotate 30
     delaycompress
     su ec2-user ec2-user
     copytruncate
