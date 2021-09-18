@@ -1,14 +1,11 @@
 #!/usr/bin/python3
-# lastupdate: 2020-12-26 12:51 obata@miraie
+# lastupdate: 2021-09-18 10:26 obata@mir-ai.co.jp
 
 import sys
 import json
-import re
 import subprocess
 import os
-import glob
-import argparse
-import socket
+import re
 import urllib.request
 import urllib.parse
 import shutil
@@ -25,6 +22,8 @@ API_HASH_SEED = 'm1ra1eAp1Dep10y'
 
 response = {}
 instance_id = ''
+has_error = False
+error_messages = ''
 
 def main(argvs):
     global instance_id
@@ -42,7 +41,7 @@ def main(argvs):
     # 今回のリクエストIDをとる
     request_id = command['request_id']
     app_code = command['app_code']
-    type = command['command']
+    cmd_type = command['command']
 
     # これまでに完了したリクエストIDをとる
     finished_request_id = get_finished_request_id()
@@ -59,16 +58,19 @@ def main(argvs):
         #log_write(f"not having app : {app_code}")
         exit(0)
 
-    if type == 'update':
+    if cmd_type == 'update':
         exec_update_test(app_code)
 
-    elif type == 'deploy':
+    elif cmd_type == 'env':
+        exec_update_env(app_code)
+
+    elif cmd_type == 'deploy':
         exec_deploy(app_code)
 
-    elif type == 'rollback':
+    elif cmd_type == 'rollback':
         exec_rollback(app_code)
 
-    git_revision = get_git_revision(app_code)
+    get_git_revision(app_code)
 
     save_finished_request_id()
 
@@ -81,44 +83,79 @@ def exec_update_test(app_code):
     os.chdir(tgt_dir)
 
     cmd = "/usr/bin/git pull"
-    result1 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
-    result2 = update_env(app_code)
+    update_env(app_code)
 
     cmd = "/usr/local/bin/composer install --no-dev"
-    result3 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
-    result4 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan config:cache"
-    result5 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan route:cache"
-    result6 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan view:cache"
-    result7 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/local/bin/composer dump-autoload --optimize"
-    result8 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "sudo /usr/local/bin/supervisorctl reload"
-    result9 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan queue:restart"
-    result10 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "touch storage/logs/laravel.log"
-    result11 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "sudo /bin/chmod -R a+w storage"
-    result12 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
-    result13 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     response['message'] = 'Update OK'
+
+def exec_update_env(app_code):
+    tgt_dir = f"/var/www/production/{app_code}/test"
+    os.chdir(tgt_dir)
+
+    update_env(app_code)
+
+    cmd = "/usr/bin/php artisan optimize:clear"
+    run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan config:cache"
+    run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan route:cache"
+    run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan view:cache"
+    run_cmd(cmd.split())
+
+    cmd = "sudo /usr/local/bin/supervisorctl reload"
+    run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan queue:restart"
+    run_cmd(cmd.split())
+
+    cmd = "touch storage/logs/laravel.log"
+    run_cmd(cmd.split())
+
+    cmd = "sudo /bin/chmod -R a+w storage"
+    run_cmd(cmd.split())
+
+    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+    run_cmd(cmd.split())
+
+    response['message'] = '.env update OK'
 
 def exec_deploy(app_code):
     global response;
@@ -158,7 +195,7 @@ def exec_deploy(app_code):
     os.chdir(tgt_dir)
 
     cmd = "/usr/bin/php artisan queue:restart"
-    result10 = run_cmd(cmd.split())
+    run_cmd(cmd.split())
 
     response['message'] = 'Deploy OK'
 
@@ -223,23 +260,44 @@ def get_git_rev(app_code, stage):
     #print (f"get_git_rev {app_code}, {stage}, {git_rev}")
 
     cmd = f"/usr/bin/git log -n 1 {git_rev}"
-    git_detail = run_cmd(cmd.split())
-    git_details = git_detail.split("\n")
     response[stage + "_last_pull_time"] = ''
-    response[stage + "_last_commit_time"] = git_details[2]
-    response[stage + "_last_commit_time"] = response[stage + "_last_commit_time"].replace('Date: ', '')
+    response[stage + "_last_commit_time"] = ''
+    response[stage + "_last_commit_msg"] = ''
 
-    response[stage + "_last_commit_msg"] = git_details[3:]
-    response[stage + "_last_commit_msg"] = ''.join(response[stage + "_last_commit_msg"]).strip()
+    git_detail = run_cmd(cmd.split())
+
+    for git_detail in git_detail.split("\n"):
+        if 'Date: ' in git_detail:
+            response[stage + "_last_commit_time"] = git_detail.replace('Date: ', '')
+        response[stage + "_last_commit_msg"] = git_detail.strip()
 
     #print (f"git_detail")
     #print (response[stage + "_last_commit_at"])
     #print (response[stage + "_last_commit_msg"])
 
 def run_cmd(cmd):
+    global has_error, error_messages
+
     #print ('% ' + ' '.join(cmd))
-    res = subprocess.run(cmd, stdout=subprocess.PIPE)
-    return res.stdout.decode('utf-8').strip()
+    cmd_str = ' '.join(cmd)
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ret_code = res.returncode
+    stdout = res.stdout.decode('utf-8').strip()
+    stderr = res.stderr.decode('utf-8').strip()
+    stdout = re.sub(r"\s+", " ", stdout)
+    stderr = re.sub(r"\s+", " ", stderr)
+
+    msg = f"({ret_code}) {cmd_str}: {stdout} {stderr}"
+    msg = msg.replace("\n", '')
+
+    log_write(msg)
+
+    # Raise error flag
+    if (ret_code != 0):
+        has_error = True
+        error_messages += msg
+
+    return stdout
     #sys.stdout.buffer.write(res.stdout)
 
 def abort(msg):
@@ -250,6 +308,9 @@ def abort(msg):
     exit(1)
 
 def report_exit():
+    if has_error:
+        response['message'] = f"ERR {error_messages}"
+
     log_write(response['message'], True)
     put_result()
     exit(0)
@@ -262,9 +323,9 @@ def log_write(msg, detail = False):
         dt_str = dt_now.strftime('%Y/%m/%d %H:%M:%S')
         response_str = json.dumps(response)
         if (detail):
-            f.write(f"{dt_str}: {msg} : {response_str}\n")
+            f.write(f"[{dt_str}] {msg} : {response_str}\n")
         else:
-            f.write(f"{dt_str}: {msg}\n")
+            f.write(f"[{dt_str}] {msg}\n")
 
 def has_app(app_code):
     dir = f"/var/www/production/{app_code}"
@@ -432,11 +493,12 @@ def init_response():
     return response
 
 def update_env(app_code):
+    global has_error, error_messages
 
     # Make hash for authorization
     request_time = int(time.time())
     original = f"{request_time}{API_HASH_SEED}{app_code}".encode('utf8')
-    print (f"update_env() original {original}")
+    #print (f"update_env() original {original}")
     request_hash = hashlib.sha256(original).hexdigest()
 
     # call deploy api to get latest production env.
@@ -449,18 +511,26 @@ def update_env(app_code):
     result = http_call(api_url, headers)
 
     if not result:
+        has_error = True
+        error_messages += f"[update_env] no result"
         #log_write(f"api return empty.")
         return
 
     if '{' not in result:
+        has_error = True
+        error_messages += f"[update_env] invalid json"
         return
 
     cmd = json.loads(result)
 
     if ('success' not in cmd):
+        has_error = True
+        error_messages += f"[update_env] no success"
         return
 
     if ('production_env' not in cmd):
+        has_error = True
+        error_messages += f"[update_env] no production_env"
         return
 
     production_env = cmd['production_env']
@@ -468,6 +538,8 @@ def update_env(app_code):
     # Check if env file contains proper entry
 
     if ('APP_NAME' not in production_env):
+        has_error = True
+        error_messages += f"[update_env] no APP_NAME"
         return
 
     # backup current env file
@@ -483,7 +555,7 @@ def update_env(app_code):
     # Overwrite env file in test .env
     with open(tgt_path, mode='w') as f:
         f.write(production_env)
-        print (f"overwrite {tgt_path}")
+        #print (f"overwrite {tgt_path}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
