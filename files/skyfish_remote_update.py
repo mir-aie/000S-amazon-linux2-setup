@@ -284,18 +284,18 @@ def run_cmd(cmd):
     ret_code = res.returncode
     stdout = res.stdout.decode('utf-8').strip()
     stderr = res.stderr.decode('utf-8').strip()
-    stdout = re.sub(r"\s+", " ", stdout)
-    stderr = re.sub(r"\s+", " ", stderr)
+    stdout = re.sub(r"[ ]+", " ", stdout)
+    stderr = re.sub(r"[ ]+", " ", stderr)
 
     msg = f"({ret_code}) {cmd_str}: {stdout} {stderr}"
     msg = msg.replace("\n", '')
-
-    log_write(msg)
 
     # Raise error flag
     if (ret_code != 0):
         has_error = True
         error_messages += msg
+
+    log_write(msg)
 
     return stdout
     #sys.stdout.buffer.write(res.stdout)
