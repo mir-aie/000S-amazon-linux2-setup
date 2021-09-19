@@ -171,8 +171,21 @@ def exec_deploy(app_code):
     result_fish = run_cmd(cmd.split())
     result_fish = get_date_from_ls_output(result_fish)
 
-    #print (f"sky  = {result_sky}" )
-    #print (f"fish = {result_fish}" )
+    #print (f"FETCH_HEAD sky  = {result_sky}" )
+    #print (f"FETCH_HEAD fish = {result_fish}" )
+
+    if result_sky == result_fish:
+        cmd = "ls --full-time sky/.env"
+        result_sky = run_cmd(cmd.split())
+        result_sky = get_date_from_ls_output(result_sky)
+
+        cmd = "ls --full-time fish/.env"
+        result_fish = run_cmd(cmd.split())
+        result_fish = get_date_from_ls_output(result_fish)
+
+        #print (f"env sky  = {result_sky}" )
+        #print (f"env fish = {result_fish}" )
+
 
     if (result_sky > result_fish):
         cmd = "ln -nfs sky live"
