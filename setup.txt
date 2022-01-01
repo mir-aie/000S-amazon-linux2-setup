@@ -104,31 +104,11 @@ sudo systemctl status redis.service
 echo 'python3.8をインストール...'
 sudo amazon-linux-extras install -y python3.8=stable
 
-echo 'cloudwatch カスタムメトリクス送信設定...'
-sudo yum install -y perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA.x86_64
-curl https://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.2.zip -O
-unzip CloudWatchMonitoringScripts-1.2.2.zip
-rm CloudWatchMonitoringScripts-1.2.2.zip
-sudo mv aws-scripts-mon /root
-
-
-
-echo '以下のポリシーを持つRoleを作成して、EC2に割当(SSM, Cloudwatch)'
-echo "AmazonEC2RoleforSSM"
-echo "CloudWatchAgentServerPolicy"
-echo "AmazonSSMManagedInstanceCore"
-
-
-echo 'CloudWatchカスタムメトリクスをcrontabに追加'
-sudo vi /etc/crontab
-# */5 * * * * root /root/aws-scripts-mon/mon-put-instance-data.pl --mem-util --mem-used --mem-avail --disk-path=/ --disk-space-util --disk-space-used --disk-space-avail --from-cron > /dev/null 2>&1
-
 echo 'Google Vision API用設定情報CONFIGファイルを各サーバのローカルにコピー'
 #cp ODPF-hamamatsu-e3ef389d60ae.json $HOME/.config/gcloud/application_default_credentials.json
 
 #crontab -e
-#*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
-
+*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
 
 echo 'Reboot'
 sudo reboot -n
@@ -235,3 +215,109 @@ stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2
 #* * * * * /usr/bin/php /var/www/production/146L-poskuma-v2/live/artisan schedule:run >> /dev/null 2>&1
 
 /home/ec2-user/mecab-ipadic-neologd/cron-update.log
+
+
+================================================================
+postfix install
+
+smtp-jalert.a-alert.net 
+
+
+> /etc/postfix/master.cf
+-------------------------------------------
+30025      inet  n       -       n       -       -       smtpd
+-------------------------------------------
+30125      inet  n       -       n       -       -       smtpd
+-------------------------------------------
+
+
+> /etc/postfix/main.cf
+-------------------------------------------
+# 外部コマンド実行ユーザー
+default_privs = ec2-user
+
+# 自ホスト名
+myhostname = dev.a-alert.net
+
+# 自ドメイン設定
+mydomain = a-alert.net
+
+# 自ホスト上でローカルメール送信を行う場合、メールアドレスの@以降には自ドメイン名を補完する
+myorigin = $mydomain
+
+# ローカルホスト以外からも通信を受け付ける
+inet_interfaces = all
+
+# メールを取得するドメイン名（メールの宛先ドメインがここで指定した値にマッチした場合、自ホスト宛てとして認識する）
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+# メール中継を許可するSMTPクライアントのアドレス（VPCのネットワークアドレスとローカル通信あたりを指定すればOK）
+mynetworks = 0.0.0.0/0, 127.0.0.0/8
+
+# Mairdir形式でメールを保存
+home_mailbox = Maildir/
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+smtpd_banner = $myhostname ESMTP unknown
+
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_local_domain = $myhostname
+smtpd_recipient_restrictions =
+    permit_mynetworks
+    permit_sasl_authenticated
+    reject_unauth_destination
+
+allow_mail_to_commands = alias,forward,include
+-------------------------------------------
+
+> /etc/aliases
+-------------------------------------------
+dev-sanai-999997-30025: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
+dev-isehara-142140-30025: "|/usr/bin/php /var/www/dev/200L-07-isehara-alert-v1/artisan jalert_smtp_receiver"
+-------------------------------------------
+prd-isehara-142140-30125: "|/usr/bin/php /var/www/production/200L-07-isehara-alert-v1-production/live/artisan jalert_smtp_receiver"
+-------------------------------------------
+sudo newaliases
+sudo postfix reload
+
+sudo mkdir -p /etc/skel/Maildir/{new,cur,tmp}
+sudo chmod -R 700 /etc/skel/Maildir/
+
+sudo useradd dev-sanai-999997-30025
+sudo passwd dev-sanai-999997-30025
+Sana1999997Dv
+
+sudo useradd dev-isehara-142140-30025
+sudo passwd dev-isehara-142140-30025
+1sehara142140Dv
+
+sudo useradd test
+sudo passwd test
+Test999997Dv
+
+--------------------------------
+
+useradd prd-isehara-142140-30125
+passwd prd-isehara-142140-30125
+1sehara142140pD
+
+sudo yum -y install cyrus-sasl
+
+sudo systemctl status saslauthd
+sudo systemctl start saslauthd
+sudo systemctl is-enabled saslauthd
+sudo systemctl enable saslauthd
+sudo systemctl is-enabled saslauthd
+sudo tail -f /var/log/maillog
+
+
+
+
+--------------------------
+Name: 01-01【国民保護情報】ゲリラ
+From: 01_01_gerilla@a-alert.net
+Reply-To: reply@a-alert.net
+To: dev-sanai-999997-30025@a-alert.net
+Subject: 01-01【国民保護情報】ゲリラ・特殊部隊攻撃情報＞攻撃対象地域
