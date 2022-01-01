@@ -1,4 +1,4 @@
-/var/www/production/*/*/storage/logs/laravel.log {
+/var/www/dev/*/storage/logs/laravel.log {
     missingok
     daily
     dateext

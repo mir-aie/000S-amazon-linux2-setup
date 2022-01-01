@@ -91,6 +91,10 @@ sudo mv laravel /etc/logrotate.d/laravel.conf
 sudo chown root /etc/logrotate.d/laravel.conf
 sudo chmod 0644 /etc/logrotate.d/laravel.conf
 
+curl -o laravel_dev https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel_dev.txt
+sudo mv laravel_dev /etc/logrotate.d/laravel_dev.conf
+sudo chown root /etc/logrotate.d/laravel_dev.conf
+sudo chmod 0644 /etc/logrotate.d/laravel_dev.conf
 
 #https://chariosan.com/2019/11/10/supervisor4_al2/
 echo 'install supervisord'
