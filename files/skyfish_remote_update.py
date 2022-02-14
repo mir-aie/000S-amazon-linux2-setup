@@ -120,9 +120,6 @@ def exec_update_test(app_code):
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
     run_cmd(cmd.split())
 
-    cmd = "npm run production"
-    run_cmd(cmd.split())
-
     response['message'] = 'Update OK'
 
 def exec_update_env(app_code):
@@ -296,20 +293,25 @@ def run_cmd(cmd):
 
     #print ('% ' + ' '.join(cmd))
     cmd_str = ' '.join(cmd)
-    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    ret_code = res.returncode
-    stdout = res.stdout.decode('utf-8').strip()
-    stderr = res.stderr.decode('utf-8').strip()
-    stdout = re.sub(r"[ ]+", " ", stdout)
-    stderr = re.sub(r"[ ]+", " ", stderr)
+    try:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret_code = res.returncode
+        stdout = res.stdout.decode('utf-8').strip()
+        stderr = res.stderr.decode('utf-8').strip()
+        stdout = re.sub(r"[ ]+", " ", stdout)
+        stderr = re.sub(r"[ ]+", " ", stderr)
+        msg = f"({ret_code}) {cmd_str}: {stdout} {stderr}"
+        msg = msg.replace("\n", '')
+        # Raise error flag
+        if (ret_code != 0):
+            has_error = True
+            error_messages += msg
 
-    msg = f"({ret_code}) {cmd_str}: {stdout} {stderr}"
-    msg = msg.replace("\n", '')
-
-    # Raise error flag
-    if (ret_code != 0):
+    except Exception as e:
+        msg = f"Exception {cmd_str} : " + str(e)
         has_error = True
         error_messages += msg
+        stdout = msg
 
     log_write(msg)
 
