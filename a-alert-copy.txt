@@ -1,0 +1,144 @@
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-01-hamamatsu-alert-v1 alert.hamamatsu.odpf.net
+
+
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-501-demo01 demo01.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-502-demo02 demo02.a-alert.net
+
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-503-demo03 demo03.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-504-demo04 demo04.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-505-demo05 demo05.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-506-demo06 demo06.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-507-demo07 demo07.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-508-demo08 demo08.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-509-demo09 demo09.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-510-demo10 demo10.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-511-demo11 demo11.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-512-demo12 demo12.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-513-demo13 demo13.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-514-demo14 demo14.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-515-demo15 demo15.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-516-demo16 demo16.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-517-demo17 demo17.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-518-demo18 demo18.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-519-demo19 demo19.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-520-demo20 demo20.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-521-demo21 demo21.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-522-demo22 demo22.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-523-demo23 demo23.a-alert.net
+./skyfish_setup.sh 200L-00-core-area-alert-v1 200L-524-demo24 demo24.a-alert.net
+
+
+DB_HOST     : pubsec-rds-02.cichxtlowaor.ap-northeast-1.rds.amazonaws.com
+DB_DATABASE : alert_200_524_demo24
+DB_USERNAME : admin
+
+[migration]
+php artisan migrate
+
+[permission]
+chmod -R a+w /var/www/production/200L-524-demo24/live/storage
+chmod -R a+w /var/www/production/200L-524-demo24/live/bootstrap/cache
+
+[/etc/hosts]
+127.0.0.1   loopback-demo24.a-alert.net
+127.0.0.1   loopback-test-demo24.a-alert.net
+
+[Route 53]
+demo24.a-alert.net
+test-demo24.a-alert.net
+
+[vhost]
+cd /etc/httpd/conf.d/
+cat /etc/httpd/conf.d/vhost-200L-524-demo24-live.conf
+cat /etc/httpd/conf.d/vhost-200L-524-demo24-test.conf
+sudo service httpd configtest
+sudo service httpd graceful
+
+[crontab]
+* * * * * /usr/bin/php /var/www/production/200L-524-demo24/live/artisan schedule:run >> /dev/null 2>&1
+
+
+
+
+create database alert_200_501_demo01 default charset utf8mb4;
+create database alert_200_502_demo02 default charset utf8mb4;
+create database alert_200_503_demo03 default charset utf8mb4;
+create database alert_200_504_demo04 default charset utf8mb4;
+create database alert_200_505_demo05 default charset utf8mb4;
+create database alert_200_506_demo06 default charset utf8mb4;
+create database alert_200_507_demo07 default charset utf8mb4;
+create database alert_200_508_demo08 default charset utf8mb4;
+create database alert_200_509_demo09 default charset utf8mb4;
+create database alert_200_510_demo10 default charset utf8mb4;
+create database alert_200_511_demo11 default charset utf8mb4;
+create database alert_200_512_demo12 default charset utf8mb4;
+create database alert_200_513_demo13 default charset utf8mb4;
+create database alert_200_514_demo14 default charset utf8mb4;
+create database alert_200_515_demo15 default charset utf8mb4;
+create database alert_200_516_demo16 default charset utf8mb4;
+create database alert_200_517_demo17 default charset utf8mb4;
+create database alert_200_518_demo18 default charset utf8mb4;
+create database alert_200_519_demo19 default charset utf8mb4;
+create database alert_200_520_demo20 default charset utf8mb4;
+create database alert_200_521_demo21 default charset utf8mb4;
+create database alert_200_522_demo22 default charset utf8mb4;
+create database alert_200_523_demo23 default charset utf8mb4;
+create database alert_200_524_demo24 default charset utf8mb4;
+
+cd /var/www/production/200L-501-demo01/live/; php artisan migrate
+cd /var/www/production/200L-502-demo02/live/; php artisan migrate --force
+cd /var/www/production/200L-503-demo03/live/; php artisan migrate --force
+cd /var/www/production/200L-504-demo04/live/; php artisan migrate --force
+cd /var/www/production/200L-505-demo05/live/; php artisan migrate --force
+cd /var/www/production/200L-506-demo06/live/; php artisan migrate --force
+cd /var/www/production/200L-507-demo07/live/; php artisan migrate --force
+cd /var/www/production/200L-508-demo08/live/; php artisan migrate --force
+cd /var/www/production/200L-509-demo09/live/; php artisan migrate --force
+cd /var/www/production/200L-510-demo10/live/; php artisan migrate --force
+cd /var/www/production/200L-511-demo11/live/; php artisan migrate --force
+cd /var/www/production/200L-512-demo12/live/; php artisan migrate --force
+cd /var/www/production/200L-513-demo13/live/; php artisan migrate --force
+cd /var/www/production/200L-514-demo14/live/; php artisan migrate --force
+cd /var/www/production/200L-515-demo15/live/; php artisan migrate --force
+cd /var/www/production/200L-516-demo16/live/; php artisan migrate --force
+cd /var/www/production/200L-517-demo17/live/; php artisan migrate --force
+cd /var/www/production/200L-518-demo18/live/; php artisan migrate --force
+cd /var/www/production/200L-519-demo19/live/; php artisan migrate --force
+cd /var/www/production/200L-520-demo20/live/; php artisan migrate --force
+cd /var/www/production/200L-521-demo21/live/; php artisan migrate --force
+cd /var/www/production/200L-522-demo22/live/; php artisan migrate --force
+cd /var/www/production/200L-523-demo23/live/; php artisan migrate --force
+cd /var/www/production/200L-524-demo24/live/; php artisan migrate --force
+
+cd /var/www/production/200L-501-demo01/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-501-demo01/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-502-demo02/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-502-demo02/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-503-demo03/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-503-demo03/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-504-demo04/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-504-demo04/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-505-demo05/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-505-demo05/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-506-demo06/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-506-demo06/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-507-demo07/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-507-demo07/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-508-demo08/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-508-demo08/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-509-demo09/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-509-demo09/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-510-demo10/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-510-demo10/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-511-demo11/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-511-demo11/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-512-demo12/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-512-demo12/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-513-demo13/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-513-demo13/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-514-demo14/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-514-demo14/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-515-demo15/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-515-demo15/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-516-demo16/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-516-demo16/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-517-demo17/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-517-demo17/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-518-demo18/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-518-demo18/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-519-demo19/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-519-demo19/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-520-demo20/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-520-demo20/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-521-demo21/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-521-demo21/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-522-demo22/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-522-demo22/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-523-demo23/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-523-demo23/test/; git pull; php artisan config:cache
+cd /var/www/production/200L-524-demo24/live/; git pull ; php artisan db:seed --force; php artisan config:cache; cd /var/www/production/200L-524-demo24/test/; git pull; php artisan config:cache
+
+
+sudo sed -i "s/Jpp0stM1ra1e/PubSecM1ra1e/g" /var/www/production/200*/live/.env  /var/www/production/200*/test/.env 
+
+sudo sed -i "s/#//g" 200L-*.conf
+
+sudo sed -i "s/ALERT_DEMO[0-9][0-9]/ALERT/g" /var/www/production/200*/live/.env  /var/www/production/200*/test/.env 
+
