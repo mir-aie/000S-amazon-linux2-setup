@@ -75,7 +75,6 @@ sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
-npm install webpack
 cd -
 
 git clone $GIT_SSH fish
@@ -87,7 +86,6 @@ sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
-npm install webpack
 cd -
 
 ln -s sky live
