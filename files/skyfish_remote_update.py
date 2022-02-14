@@ -120,6 +120,9 @@ def exec_update_test(app_code):
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
     run_cmd(cmd.split())
 
+    cmd = "npm run production"
+    run_cmd(cmd.split())
+
     response['message'] = 'Update OK'
 
 def exec_update_env(app_code):
