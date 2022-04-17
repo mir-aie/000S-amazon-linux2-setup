@@ -22,8 +22,6 @@ echo "SERVER_NAME=$SERVER_NAME"
 echo "INSTANCE_ID=$INSTANCE_ID"
 echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 
-sudo su --login ec2-user
-
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
@@ -34,7 +32,7 @@ cd ~
 mkdir -p bin
 cd bin
 
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-phpXXXX.sh
 chmod a+x amazon_linux2_init.sh
 ./amazon_linux2_init.sh
 
@@ -50,6 +48,21 @@ echo '以下手動'
 #echo '$ sudo visudo'
 #echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
 #echo
+
+======== php8 の場合 ここから ===========
+# igbinary, phpredis 
+sudo yum install -y gcc
+sudo yum install -y php-devel
+sudo yum install -y php-pear
+sudo pecl install igbinary
+echo "extension=igbinary.so" | sudo tee /etc/php.d/50-igbinary.ini
+
+# phpredis 
+sudo pecl install redis
+---- igbinaryはnoにする
+echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
+======== php8 の場合 ここまで ===========
+
 
 echo 'git用のsshの登録'
 ssh-keygen -t rsa
@@ -77,13 +90,9 @@ sudo systemctl start yum-cron
 sudo systemctl enable yum-cron
 sudo systemctl status yum-cron
 
-
-
 echo 'mariadbをインストール...'
-sudo amazon-linux-extras disable php7.4
-sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
+sudo amazon-linux-extras enable mariadb10.5=stable
 sudo yum install -y mariadb-server
-sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'mariadbの起動設定'
 sudo systemctl start mariadb
@@ -95,7 +104,7 @@ echo 'mariadbのセキュリティ設定'
 sudo mysql_secure_installation
 
 echo 'redisをインストール...'
-sudo amazon-linux-extras install -y redis4.0=stable
+sudo amazon-linux-extras install redis6=stable
 sudo systemctl start redis.service
 sudo systemctl enable redis.service
 sudo systemctl is-enabled redis.service
