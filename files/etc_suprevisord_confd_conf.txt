@@ -4,7 +4,7 @@
 #command=/usr/bin/php artisan queue:work
 #autostart=true
 #autorestart=true
-#user=ec2-user
+#user=apache
 #numprocs=3
 #redirect_stderr=true
 #stdout_logfile=/var/www/production/BASENAME/live/storage/logs/queue-worker.log

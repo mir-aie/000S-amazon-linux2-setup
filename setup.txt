@@ -32,11 +32,9 @@ cd ~
 mkdir -p bin
 cd bin
 
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-phpXXXX.sh
-chmod a+x amazon_linux2_init.sh
-./amazon_linux2_init.sh
-
-
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php8.sh
+chmod a+x amazon_linux2_init-php8.sh
+./amazon_linux2_init-php8.sh
 
 
 #######################################################
@@ -91,8 +89,11 @@ sudo systemctl enable yum-cron
 sudo systemctl status yum-cron
 
 echo 'mariadbをインストール...'
+#sudo amazon-linux-extras disable php7.4
+#sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
 sudo amazon-linux-extras enable mariadb10.5=stable
 sudo yum install -y mariadb-server
+#sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'mariadbの起動設定'
 sudo systemctl start mariadb
@@ -104,6 +105,7 @@ echo 'mariadbのセキュリティ設定'
 sudo mysql_secure_installation
 
 echo 'redisをインストール...'
+#sudo amazon-linux-extras install -y redis4.0=stable
 sudo amazon-linux-extras install redis6=stable
 sudo systemctl start redis.service
 sudo systemctl enable redis.service
@@ -200,13 +202,15 @@ cd ~/bin
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
 chmod a+x mecab_update_dict_neologd.sh
 
-crontab
+ocrontab -e
 # 毎週火曜日と金曜日にmecabの辞書を更新
 # https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md
 00 03 * * 2,5 /home/ec2-user/bin/mecab_update_dict_neologd.sh > /dev/null 2>&1
 
 
 # Polly server daemonize
+git clone git@github.com:mir-aie/196L-polly-speech-v2.git
+
 sudo vi /etc/supervisord/conf.d/196L-polly-speech-v2.conf
 [program:196L-polly-speech-v2]
 process_name=%(program_name)s_%(process_num)02d

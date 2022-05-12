@@ -149,6 +149,7 @@ echo "sudo service httpd configtest"
 echo "sudo service httpd graceful"
 echo
 echo "[crontab]"
+echo "crontab -u apache -e"
 echo "* * * * * /usr/bin/php $DIR/live/artisan schedule:run >> /dev/null 2>&1"
 echo 
 echo "[supervisord / queue]"
