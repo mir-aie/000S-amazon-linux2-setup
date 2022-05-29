@@ -121,6 +121,10 @@ sudo systemctl start supervisord
 sudo systemctl status supervisord
 sudo systemctl enable supervisord
 
+echo 'install clamav'
+sudo amazon-linux-extras install epel
+sudo yum -y install clamav clamav-update clamd
+
 cd ~
 mkdir -p bin
 cd bin
@@ -133,6 +137,7 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
 
 chmod +x *.sh
 chmod +x *.py
