@@ -5,6 +5,6 @@
 #autostart=true
 #autorestart=true
 #user=apache
-#numprocs=3
+#numprocs=2
 #redirect_stderr=true
 #stdout_logfile=/var/www/dev/BASENAME/storage/logs/queue-worker.log

@@ -74,7 +74,7 @@ sudo chown ec2-user storage/app/mir_tmp
 sudo chgrp ec2-user storage/app/mir_tmp
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
-cd -
+cd $DIR
 
 # vhost
 
@@ -85,19 +85,25 @@ sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf
 echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf"
 
 # supervisord / queue worker
-curl -o supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf.txt
+curl -o supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf_check.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 
-# mysql
-DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
-DB_DATABASE=`grep DB_DATABASE= $DIR/live/.env | cut -d = -f 2`
-DB_USERNAME=`grep DB_USERNAME= $DIR/live/.env | cut -d = -f 2`
-DB_PASSWORD=`grep DB_PASSWORD= $DIR/live/.env | cut -d = -f 2`
+echo "[.env]"
+echo "vi $DIR/.env"
+echo 
 
-echo "[mysql]"
-echo "create database DATABASE default charset utf8mb4;"
+# mysql
+DB_HOST=`grep DB_HOST= $DIR/.env | cut -d = -f 2`
+DB_DATABASE=`grep DB_DATABASE= $DIR/.env | cut -d = -f 2`
+DB_USERNAME=`grep DB_USERNAME= $DIR/.env | cut -d = -f 2`
+DB_PASSWORD=`grep DB_PASSWORD= $DIR/.env | cut -d = -f 2`
+
+echo "[mysql]"a
+echo "mysql -u $DB_USERNAME -p"
+echo "$DB_PASSWORD"
+echo "create database $DB_DATABASE default charset utf8mb4;"
 echo
 echo "[migration]"
 echo "php artisan migrate"
