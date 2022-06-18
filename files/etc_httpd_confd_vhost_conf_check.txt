@@ -1,0 +1,14 @@
+<VirtualHost *:80>
+  ServerName DOMAIN
+  ServerAlias loopback-DOMAIN
+  DocumentRoot /var/www/dev/BASENAME/public
+  AllowEncodedSlashes On
+  CustomLog logs/check-BASENAME.access.log combined
+  ErrorLog logs/check-BASENAME.error.log
+
+  <Directory "/var/www/dev/BASENAME/public">
+    Options Indexes FollowSymlinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+</VirtualHost>
