@@ -107,7 +107,7 @@ echo "create database $DB_DATABASE default charset utf8mb4;"
 echo
 echo "[migration]"
 echo "php artisan migrate"
-echo "php artisan db:seed --table=UserTableSeeder"
+echo "php artisan db:seed --class=UserTableSeeder"
 echo
 echo "[permission]"
 echo "chmod -R a+w $DIR/storage"
@@ -118,7 +118,6 @@ echo "$DOMAIN"
 echo "test-$DOMAIN"
 echo
 echo "[vhost]"
-echo "cd /etc/httpd/conf.d/"
 echo "cat $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf"
 echo "sudo service httpd configtest"
 echo "sudo service httpd graceful"
