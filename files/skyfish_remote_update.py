@@ -102,8 +102,7 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/php artisan view:cache"
     run_cmd(cmd.split())
 
-    cmd = "composer install --no-dev --optimize-autoloader"
-    #cmd = "/usr/local/bin/composer dump-autoload --optimize"
+    cmd = "/usr/local/bin/composer dump-autoload --optimize"
     run_cmd(cmd.split())
 
     cmd = "sudo /usr/local/bin/supervisorctl reload"
