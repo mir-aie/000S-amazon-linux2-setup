@@ -59,6 +59,7 @@ diff /etc/php.ini.default /etc/php.ini
 sudo yum install -y gcc
 sudo yum install -y php-devel
 sudo yum install -y php-pear
+sudo yum install -y php-intl
 sudo pecl install igbinary
 echo "extension=igbinary.so" | sudo tee /etc/php.d/50-igbinary.ini
 
