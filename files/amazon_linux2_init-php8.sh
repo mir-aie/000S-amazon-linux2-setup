@@ -55,6 +55,19 @@ sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
 sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
 
+# igbinary, phpredis 
+sudo yum install -y gcc
+sudo yum install -y php-devel
+sudo yum install -y php-pear
+sudo pecl install igbinary
+echo "extension=igbinary.so" | sudo tee /etc/php.d/50-igbinary.ini
+
+# phpredis 
+sudo pecl install redis
+---- igbinaryはnoにする
+echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
+
+
 echo 'gitをインストール...'
 sudo yum install -y git
 

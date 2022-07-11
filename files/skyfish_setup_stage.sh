@@ -93,14 +93,20 @@ echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 echo "[.env]"
 echo "vi $DIR/.env"
 echo 
+echo "cd $DIR"
 
 # mysql
-DB_HOST=`grep DB_HOST= $DIR/.env | cut -d = -f 2`
-DB_DATABASE=`grep DB_DATABASE= $DIR/.env | cut -d = -f 2`
-DB_USERNAME=`grep DB_USERNAME= $DIR/.env | cut -d = -f 2`
-DB_PASSWORD=`grep DB_PASSWORD= $DIR/.env | cut -d = -f 2`
+echo `grep DB_HOST= $DIR/.env | cut -d = -f 2`
+echo `grep DB_DATABASE= $DIR/.env | cut -d = -f 2`
+echo `grep DB_USERNAME= $DIR/.env | cut -d = -f 2`
+echo `grep DB_PASSWORD= $DIR/.env | cut -d = -f 2`
 
-echo "[mysql]"a
+DB_HOST=localhost
+DB_DATABASE="DATABASE_NAME"
+DB_USERNAME="DATABASE_USER"
+DB_PASSWORD="DATABASE_PASS"
+
+echo "[mysql]"
 echo "mysql -u $DB_USERNAME -p"
 echo "$DB_PASSWORD"
 echo "create database $DB_DATABASE default charset utf8mb4;"

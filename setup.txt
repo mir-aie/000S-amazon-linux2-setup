@@ -47,21 +47,6 @@ echo '以下手動'
 #echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
 #echo
 
-======== php8 の場合 ここから ===========
-# igbinary, phpredis 
-sudo yum install -y gcc
-sudo yum install -y php-devel
-sudo yum install -y php-pear
-sudo pecl install igbinary
-echo "extension=igbinary.so" | sudo tee /etc/php.d/50-igbinary.ini
-
-# phpredis 
-sudo pecl install redis
----- igbinaryはnoにする
-echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
-======== php8 の場合 ここまで ===========
-
-
 echo 'git用のsshの登録'
 ssh-keygen -t rsa
 ----------- 続けないこと
