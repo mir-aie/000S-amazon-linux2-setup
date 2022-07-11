@@ -140,8 +140,8 @@ def exec_update_env(app_code):
     cmd = "/usr/bin/php artisan view:cache"
     run_cmd(cmd.split())
 
-    cmd = "sudo /usr/local/bin/supervisorctl reload"
-    run_cmd(cmd.split())
+    #cmd = "sudo /usr/local/bin/supervisorctl reload"
+    #run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan queue:restart"
     run_cmd(cmd.split())
