@@ -80,8 +80,10 @@ composer --version
 echo 'nodeをインストール...'
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 . ~/.nvm/nvm.sh
-nvm install node
+nvm use 16
+vm install  16
 node -v
+
 
 
 #echo 'my-userを作成...'
@@ -153,11 +155,13 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.py
-
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/freshclam.conf
 
 chmod +x *.sh
 chmod +x *.py
+sudo mv freshclam.conf /etc
 cd -
+
 
 echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
 echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
