@@ -36,6 +36,10 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 chmod a+x amazon_linux2_init-php8.sh
 ./amazon_linux2_init-php8.sh
 
+# igbinaryはno
+
+
+
 
 #######################################################
 # 以下手動
@@ -52,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name p8-mms-dev
+git config --global user.name p8-prd-1a
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -62,6 +66,7 @@ git config --global user.email ss@mir-ai.co.jp
 ssh -T git@github.com
 
 ## Add crontab
+
 
 echo 'セキュリティパッチを自動適用...'
 sudo yum install yum-cron -y
@@ -105,6 +110,7 @@ echo 'Google Vision API用設定情報CONFIGファイルを各サーバのロー
 
 #crontab -e
 */10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
+* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
 
 echo 'Reboot'
 sudo reboot -n
@@ -154,13 +160,13 @@ ns-918.awsdns-50.net.
 ns-260.awsdns-32.com.
 
 
-SWAP
-sudo dd if=/dev/zero of=/swapfile bs=128M count=32
-sudo chmod 600 /swapfile 
-sudo mkswap /swapfile 
-sudo swapon /swapfile 
-sudo swapon -s 
-echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+#SWAP
+#sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+#sudo chmod 600 /swapfile 
+#sudo mkswap /swapfile 
+#sudo swapon /swapfile 
+#sudo swapon -s 
+#echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
 
 # mecab
 https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
@@ -194,22 +200,19 @@ ocrontab -e
 
 
 # Polly server daemonize
-git clone git@github.com:mir-aie/196L-polly-speech-v2.git
+#git clone git@github.com:mir-aie/196L-polly-speech-v2.git
+#sudo vi /etc/supervisord/conf.d/196L-polly-speech-v2.conf
+#[program:196L-polly-speech-v2]
+#process_name=%(program_name)s_%(process_num)02d
+#directory=/var/www/production/196L-polly-speech-v2
+#command=/var/www/production/196L-polly-speech-v2/polly-speech-server.py
+#autostart=true
+#autorestart=true
+#user=ec2-user
+#numprocs=1
+#redirect_stderr=true
+#stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2.log
 
-sudo vi /etc/supervisord/conf.d/196L-polly-speech-v2.conf
-[program:196L-polly-speech-v2]
-process_name=%(program_name)s_%(process_num)02d
-directory=/var/www/production/196L-polly-speech-v2
-command=/var/www/production/196L-polly-speech-v2/polly-speech-server.py
-autostart=true
-autorestart=true
-user=ec2-user
-numprocs=1
-redirect_stderr=true
-stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2.log
-
-*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
-* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
 #* * * * * /usr/bin/php /var/www/production/146L-poskuma-v2/live/artisan schedule:run >> /dev/null 2>&1
 
 /home/ec2-user/mecab-ipadic-neologd/cron-update.log
