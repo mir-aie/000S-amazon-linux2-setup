@@ -102,6 +102,9 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/php artisan view:cache"
     run_cmd(cmd.split())
 
+    cmd = "/usr/bin/php artisan migrate --isolated"
+    run_cmd(cmd.split())
+
     # cmd = "/usr/local/bin/composer dump-autoload --optimize"
     # run_cmd(cmd.split())
 
@@ -127,6 +130,9 @@ def exec_update_env(app_code):
     os.chdir(tgt_dir)
 
     update_env(app_code)
+
+    cmd = "/usr/bin/php artisan migrate --isolated"
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
     run_cmd(cmd.split())

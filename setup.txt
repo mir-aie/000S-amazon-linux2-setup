@@ -110,7 +110,10 @@ echo 'Google Vision API用設定情報CONFIGファイルを各サーバのロー
 
 #crontab -e
 */10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
-* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update81.py >> /dev/null 2>&1
+
+# * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+
 
 echo 'Reboot'
 sudo reboot -n
