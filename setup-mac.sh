@@ -52,3 +52,14 @@ brew services start mysql@5.7
 Or, if you don't want/need a background service you can just run:
   /usr/local/opt/mysql@5.7/bin/mysql.server start
 
+==============================
+
+
+
+sudo pecl config-set php_ini /usr/local/etc/php/8.1/php.ini
+sudo pecl config-set php_bin /usr/local/opt/php@8.1/bin/php
+
+pecl install redis
+
+
+ brew install wkhtmltopdf

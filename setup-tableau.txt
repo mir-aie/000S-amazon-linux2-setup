@@ -1,0 +1,58 @@
+#!/usr/bin/bash
+
+# Author    obata@mir-ai.co.jp
+# Created   2020/6/27
+# Target    Amazon Linux 2
+
+koecyumon-1a
+koecyumon-2a
+koecyumon-batch-a
+
+# (必須)
+# ホスト名を個々に設定する
+
+SERVER_NAME=dev2.mi-sp.net
+GIT_USERNAME=miraie
+GIT_EMAIL=email@miraie.com
+
+INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
+PUBLIC_IPV4=`curl 169.254.169.254/latest/meta-data/public-ipv4/`
+
+echo "SERVER_NAME=$SERVER_NAME"
+echo "INSTANCE_ID=$INSTANCE_ID"
+echo "PUBLIC_IPV4=$PUBLIC_IPV4"
+
+# Show HOSTNAME to PROMPT
+echo 'シェルプロンプトにホスト名を表示...'
+sudo vi /etc/profile.d/prompt.sh
+export NICKNAME=prd-post-ec2-01
+sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
+
+
+https://help.tableau.com/current/server-linux/ja-jp/setup.htm
+
+
+https://ip-172-31-232-123.ap-northeast-1.compute.internal:8850
+
+
+sudo usermod -G tsmadmin -a 
+
+
+sudo usermod -G tsmadmin -a tableau-tsm
+
+sudo useradd -g tsmadmin tableau-tsm
+tab1eM1ra1e
+
+
+sudo useradd tableau1
+sudo passwd tableau1 
+tab1eM1ra1e
+
+tableau4
+HamaLWCI
+
+tableau3
+tab1eM1ra1e
+
+
+

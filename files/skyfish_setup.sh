@@ -135,6 +135,10 @@ echo "[permission]"
 echo "chmod -R a+w $DIR/live/storage"
 echo "chmod -R a+w $DIR/live/bootstrap/cache"
 echo
+echo "[git]"
+echo "cd $DIR/live/; git pull"
+echo "cd $DIR/test/; git pull"
+echo 
 echo "[/etc/hosts]"
 echo "127.0.0.1   loopback-$DOMAIN"
 echo "127.0.0.1   loopback-test-$DOMAIN"
@@ -152,8 +156,8 @@ echo "sudo service httpd graceful"
 echo
 echo "[crontab]"
 echo "crontab -u apache -e"
-echo "* * * * * /usr/bin/php $DIR/live/artisan schedule:run >> /dev/null 2>&1"
-echo 
+echo "sleep 3 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
+
 echo "[supervisord / queue]"
 echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
 echo "sudo /usr/local/bin/supervisorctl status"

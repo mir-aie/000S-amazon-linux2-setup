@@ -87,7 +87,7 @@ def exec_update_test(app_code):
 
     update_env(app_code)
 
-    cmd = "/usr/local/bin/composer install --no-dev"
+    cmd = "/usr/local/bin/composer install  --optimize-autoloader --no-dev"
     run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
@@ -102,8 +102,11 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/php artisan view:cache"
     run_cmd(cmd.split())
 
-    cmd = "/usr/local/bin/composer dump-autoload --optimize"
+    cmd = "/usr/bin/php artisan migrate --isolated"
     run_cmd(cmd.split())
+
+    # cmd = "/usr/local/bin/composer dump-autoload --optimize"
+    # run_cmd(cmd.split())
 
     #cmd = "sudo /usr/local/bin/supervisorctl reload"
     #run_cmd(cmd.split())
