@@ -33,7 +33,7 @@ mkdir -p bin
 cd bin
 
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php81.sh
-chmod a+x amazon_linux2_init-php8.sh
+chmod a+x amazon_linux2_init-php81.sh
 ./amazon_linux2_init-php8.sh
 
 # igbinaryはno
