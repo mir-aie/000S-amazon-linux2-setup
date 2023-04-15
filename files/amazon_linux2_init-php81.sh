@@ -50,9 +50,9 @@ sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-imag
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
-sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
-sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
++sudo sed -i "s/post_max_size = 8M/post_max_size = 80M/" /etc/php.ini
++sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 64M/" /etc/php.ini
++sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
 
 # igbinary, phpredis 
@@ -144,6 +144,16 @@ sudo systemctl enable supervisord
 echo 'install clamav'
 sudo amazon-linux-extras install epel
 sudo yum -y install clamav clamav-update clamd
+
+# wkhtmltopdf
+echo 'install wkhtmltopdf'
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+sudo yum -y install ./wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+wkhtmltopdf --version
+wkhtmltoimage --version
+
+sudo yum -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+
 
 cd ~
 mkdir -p bin
