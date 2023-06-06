@@ -50,9 +50,9 @@ sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-imag
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
-sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
-sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 80M/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 64M/" /etc/php.ini
+sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
 
 # igbinary, phpredis 
@@ -69,7 +69,7 @@ sudo pecl install redis
 echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
 
 # imagick
-yum install ImageMagick ImageMagick-devel
+sudo yum install ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 

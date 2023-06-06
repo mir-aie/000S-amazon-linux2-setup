@@ -25,16 +25,16 @@ echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=prd-post-ec2-01
+export NICKNAME=dmp-p81-dev
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
 mkdir -p bin
 cd bin
 
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php8.sh
-chmod a+x amazon_linux2_init-php8.sh
-./amazon_linux2_init-php8.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php81.sh
+chmod a+x amazon_linux2_init-php81.sh
+./amazon_linux2_init-php81.sh
 
 # igbinaryはno
 
