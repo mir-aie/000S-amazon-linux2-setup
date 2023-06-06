@@ -229,10 +229,16 @@ smtp-jalert.a-alert.net
 
 > /etc/postfix/master.cf
 -------------------------------------------
+#smtp      inet  n       -       n       -       -       smtpd
 30025      inet  n       -       n       -       -       smtpd
 -------------------------------------------
 30125      inet  n       -       n       -       -       smtpd
 -------------------------------------------
+
+# ec2-user@p8-prd1a-mms
+30125      inet  n       -       n       -       -       smtpd
+
+sudo postfix reload
 
 
 > /etc/postfix/main.cf
@@ -242,6 +248,7 @@ default_privs = ec2-user
 
 # 自ホスト名
 myhostname = dev.a-alert.net
+myhostname = smtp.a-alert.net # p8-prd1a-mms
 
 # 自ドメイン設定
 mydomain = a-alert.net
@@ -276,6 +283,9 @@ smtpd_recipient_restrictions =
 allow_mail_to_commands = alias,forward,include
 -------------------------------------------
 
+sudo postfix reload
+
+
 > /etc/aliases
 -------------------------------------------
 dev-sanai-999997-30025: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
@@ -283,29 +293,23 @@ dev-isehara-142140-30025: "|/usr/bin/php /var/www/dev/200L-07-isehara-alert-v1/a
 -------------------------------------------
 prd-isehara-142140-30125: "|/usr/bin/php /var/www/production/200L-07-isehara-alert-v1-production/live/artisan jalert_smtp_receiver"
 -------------------------------------------
+
+test: "|/usr/bin/php /var/www/production/300L-demo01-500001-alert-v3/live/artisan jalert_smtp_receiver"
+prod-demo01: "|/usr/bin/php /var/www/production/300L-demo01-500001-alert-v3/live/live/artisan jalert_smtp_receiver"
+
+
+
 sudo newaliases
 sudo postfix reload
 
 sudo mkdir -p /etc/skel/Maildir/{new,cur,tmp}
 sudo chmod -R 700 /etc/skel/Maildir/
 
-sudo useradd dev-sanai-999997-30025
-sudo passwd dev-sanai-999997-30025
-Sana1999997Dv
-
-sudo useradd dev-isehara-142140-30025
-sudo passwd dev-isehara-142140-30025
-1sehara142140Dv
-
-sudo useradd test
-sudo passwd test
-Test999997Dv
+sudo useradd prod-demo01
+sudo passwd prod-demo01
+1971.2.8susumu
 
 --------------------------------
-
-useradd prd-isehara-142140-30125
-passwd prd-isehara-142140-30125
-1sehara142140pD
 
 sudo yum -y install cyrus-sasl
 

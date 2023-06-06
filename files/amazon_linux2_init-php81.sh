@@ -145,6 +145,16 @@ echo 'install clamav'
 sudo amazon-linux-extras install epel
 sudo yum -y install clamav clamav-update clamd
 
+# wkhtmltopdf
+echo 'install wkhtmltopdf'
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+sudo yum -y install ./wkhtmltox-0.12.6-1.amazonlinux2.x86_64.rpm
+wkhtmltopdf --version
+wkhtmltoimage --version
+
+sudo yum -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+
+
 cd ~
 mkdir -p bin
 cd bin
