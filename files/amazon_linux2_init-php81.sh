@@ -25,9 +25,10 @@ curl -o index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-
 sudo mv index.html /var/www/html/
 curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
 sudo mv security.conf /etc/httpd/conf.d/
+curl -o security_strict.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_strict_conf.txt
+sudo mv security_strict.conf /etc/httpd/conf.d/
 curl -o vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_000.txt
 sudo mv vhost-000.conf /etc/httpd/conf.d/
-
 
 sudo cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.org
 sudo sed -i -e "s/{User-Agent}i\\\\\"\" combined$/{User-Agent}i\\\\\" %{X-Forwarded-For}i\" combined/" /etc/httpd/conf/httpd.conf
@@ -121,7 +122,7 @@ sudo chmod 0644 /etc/logrotate.d/laravel_dev.conf
 echo 'install supervisord'
 sudo yum install -y python3
 sudo pip3 install supervisor
-echo_supervisord_conf > ~/supervisord.conf
+/usr/local/bin/echo_supervisord_conf > ~/supervisord.conf
 sudo mkdir /etc/supervisord
 sudo mv ~/supervisord.conf /etc/supervisord/supervisord.conf
 sudo mkdir /etc/supervisord/conf.d

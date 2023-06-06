@@ -1,0 +1,32 @@
+# DoS 攻撃対策
+LimitRequestBody 10485760
+LimitRequestFields 50
+# slowloris 対策
+RequestReadTimeout header=20-40,MinRate=500 body=20,MinRate=500
+
+# HTTPメソッドの制限
+<Directory /var/www/html>
+    <IfVersion > 2.4>
+        Require method GET POST
+    </IfVersion>
+    <IfVersion < 2.3>
+        <Limit GET POST>
+            Order allow,deny
+            Allow from all
+        </Limit>
+        <LimitExcept GET POST>
+            Order deny,allow
+            Deny from all
+        </LimitExcept>
+    </IfVersion>
+</Directory>
+
+<Directory "/var/www/cgi-bin">
+    <IfVersion > 2.4>
+        Require all denied
+    </IfVersion>
+    <IfVersion < 2.3>
+        Order allow,deny
+        Deny from all
+    </IfVersion>
+</Directory>
