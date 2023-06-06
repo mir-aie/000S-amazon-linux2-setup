@@ -1,0 +1,363 @@
+#!/usr/bin/bash
+
+# Author    obata@mir-ai.co.jp
+# Created   2020/6/27
+# Target    Amazon Linux 2
+
+koecyumon-1a
+koecyumon-2a
+koecyumon-batch-a
+
+# (必須)
+# ホスト名を個々に設定する
+
+SERVER_NAME=dev2.mi-sp.net
+GIT_USERNAME=miraie
+GIT_EMAIL=email@miraie.com
+
+INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
+PUBLIC_IPV4=`curl 169.254.169.254/latest/meta-data/public-ipv4/`
+
+echo "SERVER_NAME=$SERVER_NAME"
+echo "INSTANCE_ID=$INSTANCE_ID"
+echo "PUBLIC_IPV4=$PUBLIC_IPV4"
+
+# Show HOSTNAME to PROMPT
+echo 'シェルプロンプトにホスト名を表示...'
+sudo vi /etc/profile.d/prompt.sh
+export NICKNAME=prd-post-ec2-01
+sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
+
+cd ~
+mkdir -p bin
+cd bin
+
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php8.sh
+chmod a+x amazon_linux2_init-php8.sh
+./amazon_linux2_init-php8.sh
+
+# igbinaryはno
+
+
+
+
+#######################################################
+# 以下手動
+echo '================================================='
+echo '以下手動'
+
+#echo 'my-userにsudo権限を付与'
+#echo '$ sudo visudo'
+#echo '追加> #my-user ALL=(ALL) NOPASSWD: ALL'
+#echo
+
+echo 'git用のsshの登録'
+ssh-keygen -t rsa
+----------- 続けないこと
+cat ~ec2-user/.ssh/id_rsa.pub
+
+git config --global user.name p8-prd-1a
+git config --global user.email ss@mir-ai.co.jp
+
+
+# github.com にSSHKEYを追加
+# https://github.com/settings/ssh/new
+# git用の.ssh/configを作成
+ssh -T git@github.com
+
+## Add crontab
+
+
+echo 'セキュリティパッチを自動適用...'
+sudo yum install yum-cron -y
+sudo cp /etc/yum/yum-cron.conf /etc/yum/yum-cron.conf.backup
+sudo sed -i "s/^update_cmd.*$/update_cmd = security/g" /etc/yum/yum-cron.conf
+sudo sed -i "s/^apply_updates.*$/apply_updates = yes/g" /etc/yum/yum-cron.conf
+diff /etc/yum/yum-cron.conf.backup /etc/yum/yum-cron.conf
+sudo systemctl start yum-cron
+sudo systemctl enable yum-cron
+sudo systemctl status yum-cron
+
+echo 'mariadbをインストール...'
+#sudo amazon-linux-extras disable php7.4
+#sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
+sudo amazon-linux-extras enable mariadb10.5=stable
+sudo yum install -y mariadb-server
+#sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
+
+echo 'mariadbの起動設定'
+sudo systemctl start mariadb
+sudo systemctl status mariadb
+sudo systemctl enable mariadb
+sudo systemctl is-enabled mariadb
+
+echo 'mariadbのセキュリティ設定'
+sudo mysql_secure_installation
+
+echo 'redisをインストール...'
+#sudo amazon-linux-extras install -y redis4.0=stable
+sudo amazon-linux-extras install redis6=stable
+sudo systemctl start redis.service
+sudo systemctl enable redis.service
+sudo systemctl is-enabled redis.service
+sudo systemctl status redis.service
+
+echo 'python3.8をインストール...'
+sudo amazon-linux-extras install -y python3.8=stable
+
+echo 'Google Vision API用設定情報CONFIGファイルを各サーバのローカルにコピー'
+#cp ODPF-hamamatsu-e3ef389d60ae.json $HOME/.config/gcloud/application_default_credentials.json
+
+#crontab -e
+*/10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
+* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update81.py >> /dev/null 2>&1
+
+# * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+
+
+echo 'Reboot'
+sudo reboot -n
+
+cd
+cd bin
+./skyfish_setup.sh
+
+
+161L-mir-admin-v1
+admin.hamamatsu.odpf.net
+git@github.com:mir-aie/161L-mir-admin-v1.git
+
+#/etc/supervisord/conf.d/001L-salvatore-laravel.conf
+#[program:001L-salvatore-laravel-queue]
+#process_name=%(program_name)s_%(process_num)02d
+#directory=/var/www/production/001L-salvatore-laravel/live/
+#command=/usr/bin/php artisan queue:work --queue=orders_prod,slack --sleep=5
+#autostart=true
+#autorestart=true
+#user=ec2-user
+#numprocs=4
+#redirect_stderr=true
+#stdout_logfile=/var/www/001L-salvatore-laravel/live/storage/logs/queue-worker.log
+#supervisorctl reload
+
+
+#echo 'my-userに.sshを付与'
+#echo 'sudo rsync -a ~ec2-user/.ssh/authorized_keys ~my-user/.ssh/'
+#echo 'sudo chown -R my-user:my-user ~my-user/.ssh'
+#echo 'sudo chmod 700 ~my-user/.ssh/'
+#echo 'sudo chmod 600 ~my-user/.ssh/**'
+#echo 'curl -o config https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/home_my_user_ssh_config.txt'
+#echo 'mv config ~my-user/.ssh/'
+#echo 'chmod 600 ~my-user/.ssh/config'
+#echo 'chmod 600 ~ec2-user/.ssh/config'
+
+# ffmpeg
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/ffmpeg
+chmod a+x ffmpeg
+
+hamamatsu.odpf.net
+NS
+ns-1324.awsdns-37.org.
+ns-1949.awsdns-51.co.uk.
+ns-918.awsdns-50.net.
+ns-260.awsdns-32.com.
+
+
+#SWAP
+#sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+#sudo chmod 600 /swapfile 
+#sudo mkswap /swapfile 
+#sudo swapon /swapfile 
+#sudo swapon -s 
+#echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+
+# mecab
+https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
+
+sudo yum update -y
+sudo yum groupinstall -y "Development Tools"
+
+wget 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE' -O mecab-0.996.tar.gz
+tar xzf mecab-0.996.tar.gz
+cd mecab-0.996
+./configure
+make
+make check
+sudo make install
+cd -
+rm -rf mecab-0.996*
+
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -y
+
+sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
+
+cd ~/bin
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
+chmod a+x mecab_update_dict_neologd.sh
+
+ocrontab -e
+# 毎週火曜日と金曜日にmecabの辞書を更新
+# https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md
+00 03 * * 2,5 /home/ec2-user/bin/mecab_update_dict_neologd.sh > /dev/null 2>&1
+
+
+# Polly server daemonize
+#git clone git@github.com:mir-aie/196L-polly-speech-v2.git
+#sudo vi /etc/supervisord/conf.d/196L-polly-speech-v2.conf
+#[program:196L-polly-speech-v2]
+#process_name=%(program_name)s_%(process_num)02d
+#directory=/var/www/production/196L-polly-speech-v2
+#command=/var/www/production/196L-polly-speech-v2/polly-speech-server.py
+#autostart=true
+#autorestart=true
+#user=ec2-user
+#numprocs=1
+#redirect_stderr=true
+#stdout_logfile=/var/www/production/196L-polly-speech-v2/log/196L-polly-speech-v2.log
+
+#* * * * * /usr/bin/php /var/www/production/146L-poskuma-v2/live/artisan schedule:run >> /dev/null 2>&1
+
+/home/ec2-user/mecab-ipadic-neologd/cron-update.log
+
+
+================================================================
+postfix install
+
+smtp-jalert.a-alert.net 
+
+
+> /etc/postfix/master.cf
+-------------------------------------------
+#smtp      inet  n       -       n       -       -       smtpd
+30025      inet  n       -       n       -       -       smtpd
+-------------------------------------------
+30125      inet  n       -       n       -       -       smtpd
+-------------------------------------------
+
+# ec2-user@p8-prd1a-mms
+30125      inet  n       -       n       -       -       smtpd
+
+sudo postfix reload
+
+
+> /etc/postfix/main.cf
+-------------------------------------------
+# 外部コマンド実行ユーザー
+default_privs = ec2-user
+
+# 自ホスト名
+myhostname = dev.a-alert.net
+myhostname = smtp.a-alert.net # p8-prd1a-mms
+
+# 自ドメイン設定
+mydomain = a-alert.net
+
+# 自ホスト上でローカルメール送信を行う場合、メールアドレスの@以降には自ドメイン名を補完する
+myorigin = $mydomain
+
+# ローカルホスト以外からも通信を受け付ける
+inet_interfaces = all
+
+# メールを取得するドメイン名（メールの宛先ドメインがここで指定した値にマッチした場合、自ホスト宛てとして認識する）
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+# メール中継を許可するSMTPクライアントのアドレス（VPCのネットワークアドレスとローカル通信あたりを指定すればOK）
+mynetworks = 0.0.0.0/0, 127.0.0.0/8
+
+# Mairdir形式でメールを保存
+home_mailbox = Maildir/
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+smtpd_banner = $myhostname ESMTP unknown
+
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_local_domain = $myhostname
+smtpd_recipient_restrictions =
+    permit_mynetworks
+    permit_sasl_authenticated
+    reject_unauth_destination
+
+allow_mail_to_commands = alias,forward,include
+-------------------------------------------
+
+sudo postfix reload
+
+
+> /etc/aliases
+-------------------------------------------
+dev-sanai-999997-30025: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
+dev-isehara-142140-30025: "|/usr/bin/php /var/www/dev/200L-07-isehara-alert-v1/artisan jalert_smtp_receiver"
+-------------------------------------------
+prd-isehara-142140-30125: "|/usr/bin/php /var/www/production/200L-07-isehara-alert-v1-production/live/artisan jalert_smtp_receiver"
+-------------------------------------------
+
+test: "|/usr/bin/php /var/www/production/300L-demo01-500001-alert-v3/live/artisan jalert_smtp_receiver"
+prod-demo01: "|/usr/bin/php /var/www/production/300L-demo01-500001-alert-v3/live/live/artisan jalert_smtp_receiver"
+
+
+sudo newaliases
+sudo postfix reload
+
+sudo mkdir -p /etc/skel/Maildir/{new,cur,tmp}
+sudo chmod -R 700 /etc/skel/Maildir/
+
+sudo useradd dev-sanai-999997-30025
+sudo passwd dev-sanai-999997-30025
+Sana1999997Dv
+
+
+sudo useradd dev-isehara-142140-30025
+sudo passwd dev-isehara-142140-30025
+1sehara142140Dv
+
+sudo useradd test
+sudo passwd test
+Test999997Dv
+
+--------------------------------
+
+useradd prd-isehara-142140-30125
+passwd prd-isehara-142140-30125
+1sehara142140pD
+
+sudo yum -y install cyrus-sasl
+
+sudo systemctl status saslauthd
+sudo systemctl start saslauthd
+sudo systemctl is-enabled saslauthd
+sudo systemctl enable saslauthd
+sudo systemctl is-enabled saslauthd
+sudo tail -f /var/log/maillog
+
+
+
+
+--------------------------
+Name: 01-01【国民保護情報】ゲリラ
+From: 01_01_gerilla@a-alert.net
+Reply-To: reply@a-alert.net
+To: dev-sanai-999997-30025@a-alert.net
+Subject: 01-01【国民保護情報】ゲリラ・特殊部隊攻撃情報＞攻撃対象地域
+
+
+'
+=======================================
+https://blog.katsubemakito.net/aws/clam-antivirus-on-amazonlinux2
+
+clamd
+
+sudo amazon-linux-extras install epel
+
+sudo yum install clamav clamav-update clamd
+sudo freshclam
+sudo cp /etc/clamd.d/scan.conf /etc/clamd.d/scan.conf.back
+
+
+clamscan -i -r ~ > /dev/null 2>&1
+
+sudo crontab -e
+30 05 * * * /home/ec2-user/bin/clamscan.sh
+
