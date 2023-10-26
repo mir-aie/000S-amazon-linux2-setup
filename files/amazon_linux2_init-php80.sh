@@ -141,6 +141,34 @@ echo 'install clamav'
 sudo amazon-linux-extras install epel
 sudo yum -y install clamav clamav-update clamd
 
+echo 'install postfix'
+sudo yum install -y postfix
+sudo cp /etc/postfix/master.cf /etc/postfix/master.cf.original
+sudo cp /etc/postfix/main.cf /etc/postfix/main.cf.original
+curl -o master.cf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_postfix_master_cf.txt
+curl -o main.cf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_postfix_main_cf.txt
+sudo mv ~/master.cf /etc/postfix/master.cf
+sudo mv ~/main.cf /etc/postfix/main.cf
+
+sudo yum -y install cyrus-sasl
+yum install cyrus-sasl-plain cyrus-sasl-lib cyrus-sasl-md5
+sudo systemctl start saslauthd
+sudo systemctl enable saslauthd
+sudo newaliases
+sudo service postfix restart
+sudo mkdir -p /etc/skel/Maildir/{new,cur,tmp}
+sudo chmod -R 700 /etc/skel/Maildir/
+echo 'create jalert user, 999999 user by command useradd, passwd, and add aliases'
+echo 'edit aliases'
+
+# sudo useradd jalert
+# sudo passwd jalert
+# /etc/aliases
+# 999999: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
+# ss -tan | grep 25
+
+#ss -tan | grep 25
+
 cd ~
 mkdir -p bin
 cd bin

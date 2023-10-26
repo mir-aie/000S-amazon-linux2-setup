@@ -1,0 +1,5 @@
+To: 999999@a-alert.net
+From: 0101@a-alert.net
+Subject: Test Subject msg_p8_dev
+
+This is a test mail from msmtp/msg_p8_dev.txt

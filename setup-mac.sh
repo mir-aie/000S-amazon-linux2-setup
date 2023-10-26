@@ -63,3 +63,12 @@ pecl install redis
 
 
  brew install wkhtmltopdf
+
+
+ # https://pauledenburg.com/setup-smtp-on-your-mac-and-send-mail-from-the-command-line/
+# https://qiita.com/idani/items/77d1ed030a11a0ae5285
+# brew install msmtp
+
+# copy to ~/.msmtprc
+
+

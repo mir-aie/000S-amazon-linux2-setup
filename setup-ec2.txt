@@ -309,6 +309,12 @@ sudo useradd prod-demo01
 sudo passwd prod-demo01
 1971.2.8susumu
 
+
+sudo useradd t1
+sudo passwd t1
+xVrdYm
+
+
 --------------------------------
 
 sudo yum -y install cyrus-sasl

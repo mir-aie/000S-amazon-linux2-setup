@@ -1,0 +1,5 @@
+To: t3@a-alert.net
+From: t1@a-alert.net
+Subject: Test Subject msg_pubsec_dev
+
+This is a test mail from msmtp/msg_pubsec_dev.txt
