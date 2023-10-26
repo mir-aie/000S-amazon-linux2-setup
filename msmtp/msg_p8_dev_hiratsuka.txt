@@ -1,0 +1,6 @@
+To: hiratsuka-142034@a-alert.net
+From: jalert-hiratsuka-142034@mir-ai.co.jp
+Subject: J-Alert Test 平塚市 検証環境
+
+This is a test mail for Hiratsuka J-alert.
+

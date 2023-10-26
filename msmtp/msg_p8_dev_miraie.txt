@@ -1,5 +1,6 @@
-To: 999999@a-alert.net
-From: 0101@a-alert.net
-Subject: Test Subject msg_p8_dev
+To: miraie-999999@a-alert.net
+From: jalert-miraie-999999@mir-ai.co.jp
+Subject: Test Subject msg_p8_dev 日本語
 
 This is a test mail from msmtp/msg_p8_dev.txt
+日本語です

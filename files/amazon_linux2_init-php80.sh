@@ -147,11 +147,11 @@ sudo cp /etc/postfix/master.cf /etc/postfix/master.cf.original
 sudo cp /etc/postfix/main.cf /etc/postfix/main.cf.original
 curl -o master.cf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_postfix_master_cf.txt
 curl -o main.cf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_postfix_main_cf.txt
-sudo mv ~/master.cf /etc/postfix/master.cf
-sudo mv ~/main.cf /etc/postfix/main.cf
+sudo mv master.cf /etc/postfix/master.cf
+sudo mv main.cf /etc/postfix/main.cf
 
 sudo yum -y install cyrus-sasl
-yum install cyrus-sasl-plain cyrus-sasl-lib cyrus-sasl-md5
+sudo yum -y install cyrus-sasl-plain cyrus-sasl-lib cyrus-sasl-md5
 sudo systemctl start saslauthd
 sudo systemctl enable saslauthd
 sudo newaliases
@@ -163,10 +163,14 @@ echo 'edit aliases'
 
 # sudo useradd jalert
 # sudo passwd jalert
+# hiratsuka-142034
+#
+#
+
 # /etc/aliases
 # 999999: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
 # ss -tan | grep 25
-
+# sudo newaliases
 #ss -tan | grep 25
 
 cd ~
