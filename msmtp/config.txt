@@ -1,0 +1,78 @@
+smtp.a-alert.net
+30199
+
+
+
+
+
+
+
+
+
+
+
+
+
+miraie-999999: "|/usr/bin/php /var/www/dev/300L-miraie-999999-alert-v3/artisan jalert_smtp_receiver"
+
+from: miraie-999999@mir-ai.co.jp
+
+miraie-999999@smtp.a-alert.net
+
+jalert-miraie-999999@mir-ai.co.jp
+jalert-hiratsuka-142034@mir-ai.co.jp
+
+
+SMTP
+
+
+smtp-jalert.a-alert.net
+
+
+
+HELO smtp.a-alert.net
+MAIL FROM: jalert-miraie-999999@mir-ai.co.jp
+RCPT TO: jalert-miraie-999999@smtp.a-alert.net
+DATA
+To: jalert-miraie-999999@smtp.a-alert.net
+From: miraie-999999@mir-ai.co.jp
+Subject: test4
+
+Hello world4
+.
+
+
+===================
+
+
+■ メール送信インターフェース設定
+=================================
+SMTPサーバ
+smtp-jalert.a-alert.net
+
+ポート番号
+30025
+
+認証方式
+SMTP-AUTH
+
+POPサーバ
+（空欄）
+
+アカウント
+jalert
+
+パスワード
+
+=================================
+
+
+■ 外部インターフェース 動作ルール詳細
+=================================
+メール送信時（差出アドレス、受取アドレスなど）
+
+From: t1@a-alert.net
+Sender: t2@a-alert.net
+Reply-To: r1@a-alert.net
+送信先アドレス一覧: t3@a-alert.net
+=======
