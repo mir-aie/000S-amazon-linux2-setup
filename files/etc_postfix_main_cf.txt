@@ -74,7 +74,7 @@ default_privs = apache
 # from gethostname(). $myhostname is used as a default value for many
 # other configuration parameters.
 #
-myhostname = smtp-jalert.a-alert.net
+myhostname = smtp.a-alert.net
 #myhostname = virtual.domain.tld
 
 # The mydomain parameter specifies the local internet domain name.
@@ -689,6 +689,8 @@ smtpd_sasl_local_domain = $myhostname
 smtpd_recipient_restrictions =
     permit_mynetworks
     permit_sasl_authenticated
+    permit_inet_interfaces
     reject_unauth_destination
 smtpd_sasl_security_options = noanonymous
+#https://linux-svr.com/%E3%83%A1%E3%83%BC%E3%83%AB%E3%82%B5%E3%83%BC%E3%83%90/19.php
 

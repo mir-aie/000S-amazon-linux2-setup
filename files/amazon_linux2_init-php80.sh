@@ -164,8 +164,10 @@ echo 'edit aliases'
 # sudo useradd jalert
 # sudo passwd jalert
 # hiratsuka-142034
-#
-#
+# demo01-500001
+# hiratsuka-142034
+# atsugi-142123
+# miraie-999999
 
 # /etc/aliases
 # 999999: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"

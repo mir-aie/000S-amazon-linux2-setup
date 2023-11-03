@@ -26,7 +26,7 @@ smtp      inet  n       -       n       -       -       smtpd
 #smtps     inet  n       -       n       -       -       smtpd
 #  -o syslog_name=postfix/smtps
 #  -o smtpd_tls_wrappermode=yes
-#  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_sasl_auth_enable=yes
 #  -o smtpd_reject_unlisted_recipient=no
 #  -o smtpd_client_restrictions=$mua_client_restrictions
 #  -o smtpd_helo_restrictions=$mua_helo_restrictions
