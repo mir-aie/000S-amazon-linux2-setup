@@ -161,7 +161,8 @@ sudo chmod -R 700 /etc/skel/Maildir/
 echo 'create jalert user, 999999 user by command useradd, passwd, and add aliases'
 echo 'edit aliases'
 
-# sudo useradd jalert
+# sudo useradd jalert-miraie-999999
+# sudo useradd jalert-hiratsuka-142034
 # sudo passwd jalert
 # hiratsuka-142034
 # demo01-500001
@@ -169,11 +170,60 @@ echo 'edit aliases'
 # atsugi-142123
 # miraie-999999
 
+
+sudo useradd jalert-miraie-999999
+sudo useradd jalert-hiratsuka-142034
+sudo useradd jalert-demo01-500001
+sudo useradd jalert-atsugi-142123
+sudo vi /etc/aliases
+sudo newaliases
+sudo saslpasswd2 -c -u smtp.a-alert.net jalert
+sudo sasldblistusers2
+
+saslpasswd2 -d -u a-alert.net jalert
+
+# SMTP SERVER
+# smtp-jalert.a-alert.net
+#
+# PORT
+# 30100 (for p8-prd1)
+# 30199 (for p8-dev-25)
+#
+# USER
+# jalert
+#
+# PASS
+# 
+#
+# 認証方式
+# SMTP-AUTH
+#
+# FROM mail address
+# jalert-hiratsuka-142034@mir-ai.co.jp
+# jalert-miraie-999999@mir-ai.co.jp
+#
+#
+# TO mail address
+# DEV   
+# jalert-hiratsuka-142034@smtp.a-alert.net
+# jalert-miraie-999999@smtp.a-alert.net
+#
+# PROD
+# jalert-hiratsuka-142034@smtp.a-alert.net
+# jalert-demo01-500001@smtp.a-alert.net
+# jalert-atsugi-142123@smtp.a-alert.net
+
+# cat /Users/obatasusumu/MIRAiE/setup/000S-amazon-linux2-setup/msmtp/msg_p8_dev_miraie.txt | msmtp -t
+#
+#
 # /etc/aliases
 # 999999: "|/usr/bin/php /var/www/dev/200L-05-sanai-alert-v1/artisan jalert_smtp_receiver"
 # ss -tan | grep 25
 # sudo newaliases
 #ss -tan | grep 25
+
+# telnet smtp.a-alert.net 30199
+# https://linux-svr.com/%E3%83%A1%E3%83%BC%E3%83%AB%E3%82%B5%E3%83%BC%E3%83%90/19.php
 
 cd ~
 mkdir -p bin
