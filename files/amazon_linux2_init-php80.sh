@@ -161,15 +161,10 @@ sudo chmod -R 700 /etc/skel/Maildir/
 echo 'create jalert user, 999999 user by command useradd, passwd, and add aliases'
 echo 'edit aliases'
 
+# sudo useradd jalert
 # sudo useradd jalert-miraie-999999
 # sudo useradd jalert-hiratsuka-142034
 # sudo passwd jalert
-# hiratsuka-142034
-# demo01-500001
-# hiratsuka-142034
-# atsugi-142123
-# miraie-999999
-
 
 sudo useradd jalert-miraie-999999
 sudo useradd jalert-hiratsuka-142034
@@ -177,11 +172,17 @@ sudo useradd jalert-demo01-500001
 sudo useradd jalert-atsugi-142123
 sudo vi /etc/aliases
 sudo newaliases
+# Create sasl user
 sudo saslpasswd2 -c -u smtp.a-alert.net jalert
 sudo sasldblistusers2
 
+# Delete sasl user
 saslpasswd2 -d -u a-alert.net jalert
 
+telnet smtp.a-alert.net 30100
+EHLO smtp.a-alert.net
+# 250-AUTH PLAIN LOGIN が表示されるか確認
+QUIT
 # SMTP SERVER
 # smtp-jalert.a-alert.net
 #
