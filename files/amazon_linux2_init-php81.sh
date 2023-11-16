@@ -74,6 +74,10 @@ sudo yum install ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
+# mailparse (動作未検証)
+sudo pecl install mailparse
+echo "extension=mailparse.so" | sudo tee /etc/php.d/50-mailparse.ini
+
 echo 'gitをインストール...'
 sudo yum install -y git
 
