@@ -1,3 +1,26 @@
+direnv を使ったディレクトリごとのPHPバージョン設定
+https://zenn.dev/ttskch/articles/e6f6b2af2972ab
+
+
+
+brew install shivammathur/php/php@7.4
+brew install shivammathur/php/php@8.0
+brew install shivammathur/php/php@8.1
+brew install shivammathur/php/php@8.2
+brew install shivammathur/php/php@8.3
+brew link --force --overwrite shivammathur/php/php@8.3
+
+brew install shivammathur/extensions/igbinary@8.2
+brew install shivammathur/extensions/imagick@8.2
+brew install shivammathur/extensions/redis@8.2
+
+
+
+node インストール
+https://qiita.com/kyosuke5_20/items/c5f68fc9d89b84c0df09
+
+
+
 brew install php@7.4
 pecl install igbinary
 pecl install redis
@@ -70,5 +93,26 @@ pecl install redis
 # brew install msmtp
 
 # copy to ~/.msmtprc
+
+
+
+
+  mysql
+php 
+  mpv
+wkhtmltopdf
+  iterm2
+curl
+ffmpeg
+git
+jq
+node
+php@8.2
+python@3.9
+wget
+
+
+
+
 
 

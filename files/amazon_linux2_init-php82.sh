@@ -46,8 +46,10 @@ sudo systemctl status httpd
 sudo systemctl enable httpd
 
 echo 'phpをインストール...'
-sudo amazon-linux-extras enable php8.1=stable
+sudo amazon-linux-extras disable php8.1
+sudo amazon-linux-extras enable php8.2=stable
 sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-imagick php-xml php-pdo php-fpm php-mysqlnd
+sudo cp /etc/php.ini.default /etc/php.ini
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
@@ -74,6 +76,10 @@ sudo yum install -y ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
+
+
+
+
 echo 'gitをインストール...'
 sudo yum install -y git
 
@@ -87,8 +93,6 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 . ~/.nvm/nvm.sh
 nvm use 16
 vm install  16
-node -v
-vm install  20
 node -v
 
 

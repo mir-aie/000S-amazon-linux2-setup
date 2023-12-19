@@ -25,7 +25,7 @@ echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=dmp-p81-dev
+export NICKNAME=v4-dev
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -38,7 +38,7 @@ chmod a+x amazon_linux2_init-php81.sh
 
 # igbinaryはno
 
-
+IMDSv2 を optional にする。
 
 
 #######################################################
@@ -56,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name p8-prd-1a
+git config --global user.name v4-dev
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -79,11 +79,8 @@ sudo systemctl enable yum-cron
 sudo systemctl status yum-cron
 
 echo 'mariadbをインストール...'
-#sudo amazon-linux-extras disable php7.4
-#sudo amazon-linux-extras enable lamp-mariadb10.2-php7.2=stable
 sudo amazon-linux-extras enable mariadb10.5=stable
 sudo yum install -y mariadb-server
-#sudo amazon-linux-extras disable lamp-mariadb10.2-php7.2
 
 echo 'mariadbの起動設定'
 sudo systemctl start mariadb
@@ -95,7 +92,6 @@ echo 'mariadbのセキュリティ設定'
 sudo mysql_secure_installation
 
 echo 'redisをインストール...'
-#sudo amazon-linux-extras install -y redis4.0=stable
 sudo amazon-linux-extras install redis6=stable
 sudo systemctl start redis.service
 sudo systemctl enable redis.service
@@ -106,7 +102,6 @@ echo 'python3.8をインストール...'
 sudo amazon-linux-extras install -y python3.8=stable
 
 echo 'Google Vision API用設定情報CONFIGファイルを各サーバのローカルにコピー'
-#cp ODPF-hamamatsu-e3ef389d60ae.json $HOME/.config/gcloud/application_default_credentials.json
 
 #crontab -e
 */10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
