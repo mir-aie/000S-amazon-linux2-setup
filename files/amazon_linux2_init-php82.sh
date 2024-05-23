@@ -46,10 +46,9 @@ sudo systemctl status httpd
 sudo systemctl enable httpd
 
 echo 'phpをインストール...'
-sudo amazon-linux-extras disable php8.1
 sudo amazon-linux-extras enable php8.2=stable
 sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-imagick php-xml php-pdo php-fpm php-mysqlnd
-sudo cp /etc/php.ini.default /etc/php.ini
+#sudo cp /etc/php.ini.default /etc/php.ini
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini

@@ -111,6 +111,9 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/php artisan queue:restart"
     run_cmd(cmd.split())
 
+    cmd = "/usr/bin/php artisan migrate --isolated --force"
+    run_cmd(cmd.split())
+
     cmd = "touch storage/logs/laravel.log"
     run_cmd(cmd.split())
 
@@ -144,6 +147,9 @@ def exec_update_env(app_code):
     #run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan queue:restart"
+    run_cmd(cmd.split())
+
+    cmd = "/usr/bin/php artisan migrate --isolated --force"
     run_cmd(cmd.split())
 
     cmd = "touch storage/logs/laravel.log"

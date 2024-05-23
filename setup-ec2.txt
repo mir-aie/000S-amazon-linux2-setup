@@ -25,16 +25,16 @@ echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=v4-dev
+export NICKNAME=p82-dev-mms
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
 mkdir -p bin
 cd bin
 
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php81.sh
-chmod a+x amazon_linux2_init-php81.sh
-./amazon_linux2_init-php81.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php82.sh
+chmod a+x amazon_linux2_init-php82.sh
+./amazon_linux2_init-php82.sh
 
 # igbinaryはno
 
@@ -56,7 +56,7 @@ ssh-keygen -t rsa
 ----------- 続けないこと
 cat ~ec2-user/.ssh/id_rsa.pub
 
-git config --global user.name v4-dev
+git config --global user.name p82-dev-mms
 git config --global user.email ss@mir-ai.co.jp
 
 
@@ -92,7 +92,7 @@ echo 'mariadbのセキュリティ設定'
 sudo mysql_secure_installation
 
 echo 'redisをインストール...'
-sudo amazon-linux-extras install redis6=stable
+sudo amazon-linux-extras -y install redis6=stable
 sudo systemctl start redis.service
 sudo systemctl enable redis.service
 sudo systemctl is-enabled redis.service
@@ -108,6 +108,15 @@ echo 'Google Vision API用設定情報CONFIGファイルを各サーバのロー
 * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update81.py >> /dev/null 2>&1
 
 # * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+
+# ffmpeg
+curl -O https://ss-pubsec-public.s3.ap-northeast-1.amazonaws.com/ffmpeg-bin/ffmpeg
+chmod a+x ffmpeg
+sudo mv ffmpeg /usr/local/bin/
+
+curl -O https://ss-pubsec-public.s3.ap-northeast-1.amazonaws.com/ffmpeg-bin/ffprobe
+chmod a+x ffprobe
+sudo mv ffprobe /usr/local/bin/
 
 
 echo 'Reboot'
@@ -146,9 +155,8 @@ git@github.com:mir-aie/161L-mir-admin-v1.git
 #echo 'chmod 600 ~my-user/.ssh/config'
 #echo 'chmod 600 ~ec2-user/.ssh/config'
 
-# ffmpeg
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/ffmpeg
-chmod a+x ffmpeg
+
+
 
 hamamatsu.odpf.net
 NS
