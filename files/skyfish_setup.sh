@@ -75,7 +75,7 @@ sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
-giy pull
+git pull
 cd -
 
 git clone $GIT_SSH fish
@@ -87,7 +87,7 @@ sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
-giy pull
+git pull
 cd -
 
 ln -s sky live
@@ -155,8 +155,9 @@ echo "sudo service httpd configtest"
 echo "sudo service httpd graceful"
 echo
 echo "[crontab]"
-echo "crontab -u apache -e"
-echo "sleep 3 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
+echo "sudo -u apache crontab -e"
+echo "* * * * * sleep 1 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
+
 
 echo "[supervisord / queue]"
 echo "cat /etc/supervisord/conf.d/$BASENAME.conf"

@@ -25,12 +25,17 @@ echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=p82-dev-mms
+export NICKNAME=p8-prd2a-mms
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
 mkdir -p bin
 cd bin
+
+-- PHP バージョンの応じて選択
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php80.sh
+chmod a+x amazon_linux2_init-php80.sh
+./amazon_linux2_init-php80.sh
 
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/amazon_linux2_init-php82.sh
 chmod a+x amazon_linux2_init-php82.sh
@@ -92,7 +97,7 @@ echo 'mariadbのセキュリティ設定'
 sudo mysql_secure_installation
 
 echo 'redisをインストール...'
-sudo amazon-linux-extras -y install redis6=stable
+sudo amazon-linux-extras install -y redis6=stable
 sudo systemctl start redis.service
 sudo systemctl enable redis.service
 sudo systemctl is-enabled redis.service
