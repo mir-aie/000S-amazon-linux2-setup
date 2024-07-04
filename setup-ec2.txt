@@ -110,9 +110,9 @@ echo 'Google Vision API用設定情報CONFIGファイルを各サーバのロー
 
 #crontab -e
 */10 * * * * /home/ec2-user/bin/skyfish_host_status.py >> /dev/null 2>&1
-* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update81.py >> /dev/null 2>&1
+#* * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update81.py >> /dev/null 2>&1
 
-# * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
+ * * * * * cd /var/www/production/ && /home/ec2-user/bin/skyfish_remote_update.py >> /dev/null 2>&1
 
 # ffmpeg
 curl -O https://ss-pubsec-public.s3.ap-northeast-1.amazonaws.com/ffmpeg-bin/ffmpeg
@@ -204,7 +204,7 @@ cd ~/bin
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
 chmod a+x mecab_update_dict_neologd.sh
 
-ocrontab -e
+crontab -e
 # 毎週火曜日と金曜日にmecabの辞書を更新
 # https://github.com/neologd/mecab-ipadic-neologd/blob/master/README.ja.md
 00 03 * * 2,5 /home/ec2-user/bin/mecab_update_dict_neologd.sh > /dev/null 2>&1
@@ -362,4 +362,18 @@ clamscan -i -r ~ > /dev/null 2>&1
 
 sudo crontab -e
 30 05 * * * /home/ec2-user/bin/clamscan.sh
+
+
+
+# libreoffice
+
+amazon-linux-extras
+sudo amazon-linux-extras enable libreoffice
+sudo yum install -y libreoffice
+sudo yum install -y libreoffice-langpack-ja
+sudo yum install -y ipa-gothic-fonts ipa-pgothic-fonts
+sudo yum install -y ipa-mincho-fonts.noarch ipa-pmincho-fonts.noarch
+
+macはサイトからダウンロード
+/Applications/LibreOffice.app/Contents/MacOS/soffice --headless --nologo --nofirststartwizard --convert-to pdf --outdir ~/Documents 
 

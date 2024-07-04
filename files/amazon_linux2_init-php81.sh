@@ -91,6 +91,18 @@ node -v
 vm install  20
 node -v
 
+echo 'soxをインストール...'
+sudo yum -y install gcc-c++ libmad libmad-devel libid3tag libid3tag-devel lame lame-devel flac-devel libvorbis-devel
+sudo mkdir /usr/local/src/SoX
+cd /usr/local/src/SoX
+sudo wget https://sourceforge.net/projects/sox/files/sox/14.4.2/sox-14.4.2.tar.gz/download
+sudo mv download sox-14.4.2.tar.gz
+sudo tar xvfz sox-14.4.2.tar.gz
+cd sox-14.4.2/
+sudo ./configure
+sudo make -s
+sudo make install
+which sox
 
 
 #echo 'my-userを作成...'

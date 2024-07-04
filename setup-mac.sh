@@ -1,8 +1,6 @@
 direnv を使ったディレクトリごとのPHPバージョン設定
 https://zenn.dev/ttskch/articles/e6f6b2af2972ab
 
-
-
 brew install shivammathur/php/php@7.4
 brew install shivammathur/php/php@8.0
 brew install shivammathur/php/php@8.1
