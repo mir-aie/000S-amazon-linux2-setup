@@ -114,3 +114,9 @@ wget
 
 
 
+
+# 英字のキーリピートを可能に
+defaults write -g ApplePressAndHoldEnabled -bool false
+
+# Python 3.12.2
+https://zenn.dev/konru/articles/python_install_mac_202402

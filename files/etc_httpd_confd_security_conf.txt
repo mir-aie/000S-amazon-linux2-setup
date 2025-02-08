@@ -6,7 +6,8 @@ Header unset "X-Powered-By"
 RequestHeader unset Proxy
 
 # クリックジャッキング対策
-Header append X-Frame-Options SAMEORIGIN
+# monitor.a-alert.netをiframe表示したいと浜松市様が
+# Header append X-Frame-Options SAMEORIGIN
 
 # XSS対策
 Header set X-XSS-Protection "1; mode=block"
