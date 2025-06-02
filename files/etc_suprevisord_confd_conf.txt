@@ -1,7 +1,7 @@
 #[program:BASENAME-queue]
 #process_name=%(program_name)s_%(process_num)02d
 #directory=/var/www/production/BASENAME/live/
-#command=/usr/bin/php artisan queue:work
+#command=/usr/bin/php artisan queue:work --queue=high,medium,default,low --sleep=2
 #autostart=true
 #autorestart=true
 #user=apache

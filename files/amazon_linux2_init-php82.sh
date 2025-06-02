@@ -47,14 +47,16 @@ sudo systemctl enable httpd
 
 echo 'phpをインストール...'
 sudo amazon-linux-extras enable php8.2=stable
-sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-pecl-imagick php-xml php-pdo php-fpm php-mysqlnd
+sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-xml php-pdo php-fpm php-mysqlnd
 #sudo cp /etc/php.ini.default /etc/php.ini
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sudo sed -i "s/post_max_size = 8M/post_max_size = 80M/" /etc/php.ini
-sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 64M/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
+sudo sed -i "s/; max_input_vars = 1000/max_input_vars = 5000/" /etc/php.ini
 sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
+sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
 
 # igbinary, phpredis 
