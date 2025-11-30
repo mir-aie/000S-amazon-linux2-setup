@@ -120,3 +120,10 @@ defaults write -g ApplePressAndHoldEnabled -bool false
 
 # Python 3.12.2
 https://zenn.dev/konru/articles/python_install_mac_202402
+
+
+# Chronium
+brew install chromium --cask
+
+# Fonts
+Amazon S3 > バケット > ss-a-alert > fonts > Notoをダウンロートして、mac の font Bookでそれぞれインストール

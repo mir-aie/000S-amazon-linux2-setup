@@ -1,0 +1,9 @@
+
+
+@ext:naoray.laravel-goto-components
+	Regex
+		(?<=<x-)(?!slot)[a-z0-9.-]+
+
+	components の ファイル名に数字を許容するために 0-9 をついか
+
+

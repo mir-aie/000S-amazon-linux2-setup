@@ -4,6 +4,6 @@
     dateext
     rotate 30
     delaycompress
-    su ec2-user ec2-user
+    su apache apache
     copytruncate
 }

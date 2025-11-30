@@ -64,6 +64,7 @@ sudo yum install -y gcc
 sudo yum install -y php-devel
 sudo yum install -y php-pear
 sudo yum install -y php-intl
+
 sudo pecl install igbinary
 echo "extension=igbinary.so" | sudo tee /etc/php.d/50-igbinary.ini
 
@@ -129,11 +130,13 @@ echo 'laravel logローテート設定...'
 curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
 sudo mv laravel /etc/logrotate.d/laravel.conf
 sudo chown root /etc/logrotate.d/laravel.conf
+sudo chgrp root /etc/logrotate.d/laravel.conf
 sudo chmod 0644 /etc/logrotate.d/laravel.conf
 
 curl -o laravel_dev https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel_dev.txt
 sudo mv laravel_dev /etc/logrotate.d/laravel_dev.conf
 sudo chown root /etc/logrotate.d/laravel_dev.conf
+sudo chgrp root /etc/logrotate.d/laravel_dev.conf
 sudo chmod 0644 /etc/logrotate.d/laravel_dev.conf
 
 #https://chariosan.com/2019/11/10/supervisor4_al2/
@@ -208,4 +211,43 @@ sudo pip3 install boto3
 
 
 /home/ec2-user/bin/skyfish_host_status.py
+
+
+
+sudo amazon-linux-extras enable postgresql13=stable
+sudo yum -y install postgresql-server postgresql-devel postgresql-contrib
+sudo postgresql-setup --initdb
+
+sudo systemctl start postgresql
+sudo systemctl enable postgresql 
+
+sudo systemctl status postgresql
+
+sudo su - postgres
+
+psql
+
+CREATE USER bu01 WITH ENCRYPTED PASSWORD 'bu01';
+ALTER USER bu01 CREATEDB;
+
+sudo su postgres -c 'psql --username=postgres'
+ALTER USER postgres with encrypted password 'postgres';
+
+
+/tmp/maindb_20250826_015438a.dump
+
+pg_restore -U bu01 -d bu01 /tmp/maindb_20250826_015438a.dump
+
+
+# https://qiita.com/_whitecat_22/items/8f80996cac9384089b09
+
+sudo vi /var/lib/pgsql/data/pg_hba.conf
+
+peer, indent -> md5
+
+sudo yum install php-pgsql
+
+
+# Ghostscript
+sudo yum -y install ghostscript
 
