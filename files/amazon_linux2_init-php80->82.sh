@@ -4,6 +4,9 @@ amazon-linux-extras list | grep php
 sudo amazon-linux-extras enable php8.2
 amazon-linux-extras list | grep php
 sudo yum remove 'php*'
+sudo rm /etc/php.d/50-igbinary.ini
+sudo rm /etc/php.d/50-redis.ini
+sudo rm /etc/php.d/50-imagick.ini
 
 sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache php-xml php-pdo php-fpm php-mysqlnd
 #sudo yum install -y php-pecl-imagick

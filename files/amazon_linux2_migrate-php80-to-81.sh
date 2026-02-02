@@ -13,7 +13,7 @@ sudo rm /etc/php.d/50-igbinary.ini
 sudo rm /etc/php.d/50-redis.ini
 
 echo 'phpをインストール...'
-sudo amazon-linux-extras enable php8.1=stable
+sudo amazon-linux-extras enable php8.2
 sudo yum install -y php php-bcmath php-gd php-mbstring php-opcache pphp-xml php-pdo php-fpm php-mysqlnd
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
@@ -37,7 +37,7 @@ sudo pecl install redis
 echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
 
 # imagick
-yum install ImageMagick ImageMagick-devel
+sudo yum install -y ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
