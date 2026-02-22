@@ -203,9 +203,7 @@ echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bas
 echo 'alias dev="cd /var/www/dev"' >> ~/.bash_profile
 echo 'alias prod="cd /var/www/production"' >> ~/.bash_profile
 
-sudo yum -y install python-pip
 sudo pip install boto
-
 sudo pip3 install boto3
 
 
