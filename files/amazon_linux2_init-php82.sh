@@ -81,7 +81,6 @@ echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
 
 
-
 echo 'gitをインストール...'
 sudo yum install -y git
 

@@ -1,0 +1,140 @@
+#!/usr/bin/bash
+
+# Author    obata@mir-ai.co.jp
+# Created   2026/6/27
+# Target    Amazon Linux 2023
+
+export SERVER_NAME=p83-dev-miraie
+export GIT_USERNAME=miraie
+export GIT_EMAIL=email@miraie.com
+
+export INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
+
+echo "SERVER_NAME=$SERVER_NAME"
+echo "INSTANCE_ID=$INSTANCE_ID"
+
+# Show HOSTNAME to PROMPT
+echo 'シェルプロンプトにホスト名を表示...'
+
+# Show HOSTNAME to PROMPT
+echo 'シェルプロンプトにホスト名を表示...'
+sudo vi /etc/profile.d/prompt.sh
+export NICKNAME=v4-prd1
+sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
+
+cd ~
+mkdir -p bin
+cd bin
+
+echo 'システムファイル更新...'
+sudo dnf upgrade --releasever=latest
+
+echo 'タイムゾーン更新...'
+sudo timedatectl set-timezone Asia/Tokyo
+
+echo '言語設定...'
+sudo localectl set-locale LANG=ja_JP.UTF-8
+
+echo 'httpdをインストール...'
+sudo dnf install -y httpd
+
+echo 'httpdの設定ファイルをインストール...'
+curl -o index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/var_www_html_index.html
+sudo mv index.html /var/www/html/
+curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
+sudo mv security.conf /etc/httpd/conf.d/
+curl -o security_strict.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_strict_conf.txt
+sudo mv security_strict.conf /etc/httpd/conf.d/
+curl -o vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_000.txt
+sudo mv vhost-000.conf /etc/httpd/conf.d/
+
+# Apache のログに X-Forwarded-For もつける
+sudo cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.org
+sudo sed -i -e "s/{User-Agent}i\\\\\"\" combined$/{User-Agent}i\\\\\" %{X-Forwarded-For}i\" combined/" /etc/httpd/conf/httpd.conf
+diff /etc/httpd/conf/httpd.conf.org  /etc/httpd/conf/httpd.conf
+
+# Safariのhttp2エラーを回避
+sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
+
+# KeepAlive On
+sudo sh -c 'echo "KeepAlive On" > /etc/httpd/conf.d/keepalive.conf'
+
+# KeepAliveTimeout
+sudo sh -c 'echo "KeepAliveTimeout 120" >> /etc/httpd/conf.d/keepalive.conf'
+
+# Apacheの起動
+sudo systemctl start httpd
+sudo systemctl status httpd
+sudo systemctl enable httpd
+
+# PHPのインストール
+echo 'phpをインストール...'
+
+dnf list --available php*
+
+sudo dnf install -y php8.3 php8.3-bcmath php8.3-cli php8.3-common php8.3-devel.x86_64 php8.3-gd.x86_64 php8.3-mbstring.x86_64 php8.3-opcache.x86_64 php8.3-xml.x86_64 php8.3-pdo.x86_64 php8.3-pecl-apcu.x86_64 php8.3-fpm.x86_64 php8.3-mysqlnd.x86_64 php8.3-intl.x86_64 php8.3-pecl-igbinary.x86_64 php8.3-pecl-redis6.x86_64 php8.3-pecl-msgpack.x86_64 php8.3-process.x86_64 php8.3-zip.x86_64 php8.3-soap.x86_64 php8.3-gmp.x86_64 
+
+sudo cp /etc/php.ini /etc/php.ini.default
+sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
+sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
+sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
+sudo sed -i "s/; max_input_vars = 1000/max_input_vars = 5000/" /etc/php.ini
+sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
+sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
+diff /etc/php.ini.default /etc/php.ini
+
+
+# PEAR
+sudo dnf install -y php-pear
+
+# IMagick
+sudo yum install -y ImageMagick ImageMagick-devel
+sudo pecl install imagick
+echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
+
+# PHPREDIS
+sudo pecl install redis
+---- igbinaryはnoにする
+echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
+
+echo 'gitをインストール...'
+sudo yum install -y git
+
+echo 'composerをインストール...'
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+composer --version
+
+# node
+# https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install --lts
+node -e "console.log('Running Node.js ' + process.version)"
+
+# sox
+sudo dnf install -y sox
+
+# ffmpeg
+sudo dnf install --nogpgcheck https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+
+
+
+#######
+# 以下手動
+
+echo 'git用のsshの登録'
+ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
+
+cat ~/.ssh/id_ed25519.pub
+
+git config --global user.name p83-dev-miraie
+git config --global user.email ss@mir-ai.co.jp
+
+
+
+
+
+php redis
+https://github.com/amazonlinux/amazon-linux-2023/issues/328
