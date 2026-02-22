@@ -17,6 +17,8 @@ brew install shivammathur/extensions/redis@8.2
 node インストール
 https://qiita.com/kyosuke5_20/items/c5f68fc9d89b84c0df09
 
+composer global require laravel/valet
+
 
 
 brew install php@7.4

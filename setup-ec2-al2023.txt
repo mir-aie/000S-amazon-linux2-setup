@@ -67,6 +67,20 @@ sudo systemctl start httpd
 sudo systemctl status httpd
 sudo systemctl enable httpd
 
+# セキュリティパッチ自動適用
+sudo dnf install -y dnf-automatic
+vi /etc/dnf/automatic.conf
+ーーーーーーーーー
+upgrade_type = security
+apply_updates = yes
+ーーーーーーーーー
+
+sudo systemctl enable --now dnf-automatic.timer
+
+# redis
+sudo dnf install redis6
+
+
 # PHPのインストール
 echo 'phpをインストール...'
 
@@ -83,7 +97,6 @@ sudo sed -i "s/; max_input_vars = 1000/max_input_vars = 5000/" /etc/php.ini
 sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
 sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini
-
 
 # PEAR
 sudo dnf install -y php-pear
@@ -113,12 +126,165 @@ source ~/.bashrc
 nvm install --lts
 node -e "console.log('Running Node.js ' + process.version)"
 
+# mariadb
+sudo dnf install -y mariadb1011 mariadb1011-server 
+sudo systemctl start mariadb
+sudo systemctl status mariadb
+sudo systemctl enable mariadb
+sudo systemctl is-enabled mariadb
+
+
+
 # sox
 sudo dnf install -y sox
 
 # ffmpeg
-sudo dnf install --nogpgcheck https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 
+curl -o ffmpeg https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffmpeg
+curl -o ffprobe https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffprobe
+chmod a+x ffmpeg ffprobe
+sudo mv ffmpeg /usr/local/bin
+sudo mv ffprobe /usr/local/bin
+
+echo 'laravelコンテンツ用ディレクトリ作成...'
+sudo mkdir /var/www/dev
+sudo chmod a+w /var/www/dev
+sudo mkdir /var/www/production
+sudo chmod a+w /var/www/production
+
+# laravel logローテート設定...
+# 本番環境用
+echo 'laravel logローテート設定...'
+curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
+sudo mv laravel /etc/logrotate.d/laravel.conf
+sudo chown root /etc/logrotate.d/laravel.conf
+sudo chgrp root /etc/logrotate.d/laravel.conf
+sudo chmod 0644 /etc/logrotate.d/laravel.conf
+
+# 開発環境用
+curl -o laravel_dev https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel_dev.txt
+sudo mv laravel_dev /etc/logrotate.d/laravel_dev.conf
+sudo chown root /etc/logrotate.d/laravel_dev.conf
+sudo chgrp root /etc/logrotate.d/laravel_dev.conf
+sudo chmod 0644 /etc/logrotate.d/laravel_dev.conf
+
+# Supervisor
+#https://chariosan.com/2019/11/10/supervisor4_al2/
+echo 'install supervisord'
+sudo dnf install python3-pip
+/usr/local/bin/echo_supervisord_conf > ~/supervisord.conf
+sudo mkdir /etc/supervisord
+sudo mv ~/supervisord.conf /etc/supervisord/supervisord.conf
+sudo mkdir /etc/supervisord/conf.d
+sudo cp /etc/supervisord/supervisord.conf /etc/supervisord/supervisord.conf.original
+sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;port=127.0.0.1:9001/port=127.0.0.1:9001/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/logfile=\/tmp\/supervisord.log/logfile=\/var\/log\/supervisord.log/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/\/tmp\/supervisord.pid/\/var\/run\/supervisord.pid/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/serverurl=unix:\/\/\/tmp\/supervisor.sock/; serverurl=unix:\/\/\/tmp\/supervisor.sock/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;serverurl=http:\/\/127.0.0.1:9001/serverurl=http:\/\/127.0.0.1:9001/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;files = relative\/directory\/\*.ini/files = \/etc\/supervisord\/conf.d\/\*.conf/" /etc/supervisord/supervisord.conf
+diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
+curl -o supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt 
+sudo mv supervisord.service /etc/systemd/system/
+sudo systemctl start supervisord
+sudo systemctl status supervisord
+sudo systemctl enable supervisord
+
+sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+
+
+cd ~
+mkdir -p bin
+cd bin
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_vhost.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.py
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/freshclam.conf
+
+chmod +x *.sh
+chmod +x *.py
+
+sudo pip install boto
+sudo pip3 install boto3
+
+# Ghostscript
+sudo dnf -y install ghostscript
+
+# chronium
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+sudo dnf install ./google-chrome-stable_current_x86_64.rpm
+
+# https://dev.classmethod.jp/articles/headless-chrome-on-al2023/
+google-chrome --headless --disable-gpu --dump-dom https://example.com/
+
+# Fonts
+sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts google-noto-sans-devanagari-fonts google-noto-sans-fonts google-noto-sans-japanese-fonts google-noto-sans-khmer-fonts google-noto-sans-korean-fonts google-noto-sans-mongolian-fonts google-noto-sans-myanmar-fonts google-noto-sans-simplified-chinese-fonts google-noto-sans-sinhala-fonts google-noto-sans-tagalog-fonts google-noto-sans-tai-viet-fonts google-noto-sans-tamil-fonts google-noto-sans-thai-fonts google-noto-sans-traditional-chinese-fonts
+
+fc-cache -fv
+fc-list
+
+# libreoffice
+
+amazon-linux-extras
+sudo amazon-linux-extras enable libreoffice
+sudo yum install -y libreoffice
+sudo yum install -y libreoffice-langpack-ja
+sudo yum install -y ipa-gothic-fonts ipa-pgothic-fonts
+sudo yum install -y ipa-mincho-fonts.noarch ipa-pmincho-fonts.noarch
+
+# mecab
+https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
+
+sudo dnf groupinstall -y "Development Tools"
+
+pip3 install mecab-python3
+curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
+
+# 形態素解析 Mecab 本体
+wget -O mecab-0.996.tar.gz https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/mecab-0.996.tar.gz
+tar xzf mecab-0.996.tar.gz
+cd mecab-0.996
+./configure
+make
+make check
+sudo make install
+cd -
+rm -rf mecab-0.996*
+
+# 形態素解析 Mecab 標準辞書
+wget -O mecab-ipadic-2.7.0-20070610.tar.gz https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/mecab-ipadic-2.7.0-20070610.tar.gz
+tar xvf mecab-ipadic-2.7.0-20070610.tar.gz
+cd mecab-ipadic-2.7.0-20070610
+./configure --with-charset=utf-8
+make
+make install
+sudo make install
+
+# 形態素解析 Mecab 追加辞書
+./mecab-ipadic-2.7.0-20070610/bin/install-mecab-ipadic-neologd -n -y
+bin/install-mecab-ipadic-neologd -n -y
+sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
+
+
+
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -y
+
+sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
+
+cd ~/bin
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
+chmod a+x mecab_update_dict_neologd.sh
 
 
 #######
