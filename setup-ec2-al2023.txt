@@ -233,14 +233,10 @@ sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmin
 fc-cache -fv
 fc-list
 
-# libreoffice
+# TODO: Polly server daemonize
 
-amazon-linux-extras
-sudo amazon-linux-extras enable libreoffice
-sudo yum install -y libreoffice
-sudo yum install -y libreoffice-langpack-ja
-sudo yum install -y ipa-gothic-fonts ipa-pgothic-fonts
-sudo yum install -y ipa-mincho-fonts.noarch ipa-pmincho-fonts.noarch
+# TODO: Postfix
+
 
 # mecab
 https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
