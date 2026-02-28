@@ -1,0 +1,15 @@
+[Unit]
+Description=BASENAME service
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/production/BASENAME/live/
+ExecStart=/usr/bin/php /var/www/production/BASENAME/live/artisan schedule:run
+User=apache
+Group=apache
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

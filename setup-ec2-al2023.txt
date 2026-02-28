@@ -1,3 +1,4 @@
+
 #!/usr/bin/bash
 
 # Author    obata@mir-ai.co.jp
@@ -66,6 +67,7 @@ sudo sh -c 'echo "KeepAliveTimeout 120" >> /etc/httpd/conf.d/keepalive.conf'
 sudo systemctl start httpd
 sudo systemctl status httpd
 sudo systemctl enable httpd
+sudo systemctl is-enabled httpd
 
 # セキュリティパッチ自動適用
 sudo dnf install -y dnf-automatic
@@ -75,7 +77,9 @@ upgrade_type = security
 apply_updates = yes
 ーーーーーーーーー
 
+sudo systemctl start dnf-automatic-install.timer
 sudo systemctl enable --now dnf-automatic.timer
+sudo systemctl status dnf-automatic-install.timer
 
 # redis
 sudo dnf install redis6
@@ -86,7 +90,7 @@ echo 'phpをインストール...'
 
 dnf list --available php*
 
-sudo dnf install -y php8.3 php8.3-bcmath php8.3-cli php8.3-common php8.3-devel.x86_64 php8.3-gd.x86_64 php8.3-mbstring.x86_64 php8.3-opcache.x86_64 php8.3-xml.x86_64 php8.3-pdo.x86_64 php8.3-pecl-apcu.x86_64 php8.3-fpm.x86_64 php8.3-mysqlnd.x86_64 php8.3-intl.x86_64 php8.3-pecl-igbinary.x86_64 php8.3-pecl-redis6.x86_64 php8.3-pecl-msgpack.x86_64 php8.3-process.x86_64 php8.3-zip.x86_64 php8.3-soap.x86_64 php8.3-gmp.x86_64 
+sudo dnf install -y php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-devel.x86_64 php8.2-gd.x86_64 php8.2-mbstring.x86_64 php8.2-opcache.x86_64 php8.2-xml.x86_64 php8.2-pdo.x86_64 php8.2-pecl-apcu.x86_64 php8.2-fpm.x86_64 php8.2-mysqlnd.x86_64 php8.2-intl.x86_64 php8.2-pecl-igbinary.x86_64 php8.2-pecl-redis6.x86_64 php8.2-pecl-msgpack.x86_64 php8.2-process.x86_64 php8.2-zip.x86_64 php8.2-soap.x86_64 php8.2-gmp.x86_64 
 
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
@@ -102,7 +106,7 @@ diff /etc/php.ini.default /etc/php.ini
 sudo dnf install -y php-pear
 
 # IMagick
-sudo yum install -y ImageMagick ImageMagick-devel
+sudo dnf install -y ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
@@ -110,6 +114,17 @@ echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 sudo pecl install redis
 ---- igbinaryはnoにする
 echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
+
+# php-fpf の起動
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+
+# Redisの起動
+sudo systemctl start redis6
+sudo systemctl status redis6
+sudo systemctl enable redis6
+sudo systemctl is-enabled redis6
+
 
 echo 'gitをインストール...'
 sudo yum install -y git
@@ -133,7 +148,7 @@ sudo systemctl status mariadb
 sudo systemctl enable mariadb
 sudo systemctl is-enabled mariadb
 
-
+sudo mysql_secure_installation
 
 # sox
 sudo dnf install -y sox
@@ -193,7 +208,6 @@ sudo systemctl status supervisord
 sudo systemctl enable supervisord
 
 sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
-
 
 cd ~
 mkdir -p bin
@@ -300,3 +314,57 @@ git config --global user.email ss@mir-ai.co.jp
 
 php redis
 https://github.com/amazonlinux/amazon-linux-2023/issues/328
+
+
+
+
+# HTTP graceful restart
+sudo apachectl configtest
+sudo systemctl reload httpd
+
+
+
+/etc/systemd/system/mytask.service
+/etc/systemd/system/mytask.timer
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now mir-353L-horo-updater-v3.timer
+sudo systemctl start mir-353L-horo-updater-v3.timer
+
+
+
+
+OnActiveSec
+タイマーがアクティブになった瞬間を基準にする。
+
+OnBootSec
+マシンが起動された時を基準にする。
+
+システムサービスマネージャーの場合は下記のOnStartupSecとほぼ同じ意味になる。
+
+OnBootSec=3min
+OnUnitActiveSec=1min
+上記の例は起動から3分後に開始して以後、1分毎の指定となる。
+
+OnStartupSec
+
+OnUnitActiveSec
+（タイマーがアクディブにしてる）ユニットが最後にアクティブにされた時を基準にする。
+
+OnUnitInactiveSec
+（タイマーがアクディブにしてる）ユニットが最後に”非アクティブ”にされた時を基準にする。
+
+OnCalendar
+
+
+
+AccuracySec
+タイマーの精度を指定する。
+
+RandomizedDelaySec
+
+Persistent
+TrueまたはFalse（デフォルト）が指定できる。
+Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
+例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
+尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。

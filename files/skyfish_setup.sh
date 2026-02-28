@@ -117,6 +117,21 @@ $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 
+# systemd / system
+curl -o systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_timer.txt
+$SED -i "s/BASENAME/$BASENAME/" systemd.timer
+sudo mv systemd.timer /etc/systemd/system/mir-$BASENAME.timer
+echo "> /etc/systemd/system/mir-$BASENAME.timer"
+
+curl -o systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_service.txt
+$SED -i "s/BASENAME/$BASENAME/" systemd.service
+sudo mv systemd.service /etc/systemd/system/mir-$BASENAME.service
+echo "> /etc/systemd/system/mir-$BASENAME.service"
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now mir-$BASENAME.timer
+sudo systemctl start mir-$BASENAME.timer
+
 # mysql
 DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
 DB_DATABASE=`grep DB_DATABASE= $DIR/live/.env | cut -d = -f 2`
