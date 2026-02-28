@@ -185,5 +185,5 @@ echo
 echo "[supervisord / queue]"
 echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
 echo "sudo /usr/local/bin/supervisorctl status"
-echo "sudo /usr/local/bin/supervisorctl reload"
+echo "sudo /usr/local/bin/supervisorctl update"
 echo "sudo /usr/local/bin/supervisorctl status"
