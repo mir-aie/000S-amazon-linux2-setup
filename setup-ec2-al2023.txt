@@ -81,10 +81,6 @@ sudo systemctl start dnf-automatic-install.timer
 sudo systemctl enable --now dnf-automatic.timer
 sudo systemctl status dnf-automatic-install.timer
 
-sudo systemctl daemon-reload
-systemctl list-timers
-
-
 # redis
 sudo dnf install redis6
 
@@ -328,6 +324,63 @@ sudo systemctl reload httpd
 
 
 
+/etc/systemd/system/mytask.service
+/etc/systemd/system/mytask.timer
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now mir-353L-horo-updater-v3.timer
+sudo systemctl start mir-353L-horo-updater-v3.timer
 
 
 
+AccuracySec
+タイマーの精度を指定する。
+
+RandomizedDelaySec
+
+Persistent
+TrueまたはFalse（デフォルト）が指定できる。
+Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
+例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
+尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。
+
+
+# https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
+systemctl list-timers
+journalctl -u mir-353L-horo-updater-v3.timer -f
+systemctl status mir-353L-horo-updater-v3.timer
+
+
+#==========================
+#  mir-353L-horo-updater-v3.timer
+#
+
+[Unit]
+Description=timer 353L-horo-updater-v3
+
+[Timer]
+OnUnitActiveSec=1min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
+
+#==========================
+#  mir-353L-horo-updater-v3.service
+#
+
+[Unit]
+Description=353L-horo-updater-v3
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/production/353L-horo-updater-v3/live/
+ExecStart=/usr/bin/php /var/www/production/353L-horo-updater-v3/live/artisan schedule:run
+User=apache
+Group=apache
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

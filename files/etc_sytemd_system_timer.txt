@@ -4,6 +4,7 @@ Description=timer BASENAME
 [Timer]
 OnUnitActiveSec=1min
 AccuracySec=10s
+RandomizedDelaySec=20s
 
 [Install]
 WantedBy=timers.target
