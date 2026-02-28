@@ -81,6 +81,10 @@ sudo systemctl start dnf-automatic-install.timer
 sudo systemctl enable --now dnf-automatic.timer
 sudo systemctl status dnf-automatic-install.timer
 
+sudo systemctl daemon-reload
+systemctl list-timers
+
+
 # redis
 sudo dnf install redis6
 
@@ -324,47 +328,6 @@ sudo systemctl reload httpd
 
 
 
-/etc/systemd/system/mytask.service
-/etc/systemd/system/mytask.timer
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now mir-353L-horo-updater-v3.timer
-sudo systemctl start mir-353L-horo-updater-v3.timer
 
 
 
-
-OnActiveSec
-タイマーがアクティブになった瞬間を基準にする。
-
-OnBootSec
-マシンが起動された時を基準にする。
-
-システムサービスマネージャーの場合は下記のOnStartupSecとほぼ同じ意味になる。
-
-OnBootSec=3min
-OnUnitActiveSec=1min
-上記の例は起動から3分後に開始して以後、1分毎の指定となる。
-
-OnStartupSec
-
-OnUnitActiveSec
-（タイマーがアクディブにしてる）ユニットが最後にアクティブにされた時を基準にする。
-
-OnUnitInactiveSec
-（タイマーがアクディブにしてる）ユニットが最後に”非アクティブ”にされた時を基準にする。
-
-OnCalendar
-
-
-
-AccuracySec
-タイマーの精度を指定する。
-
-RandomizedDelaySec
-
-Persistent
-TrueまたはFalse（デフォルト）が指定できる。
-Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
-例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
-尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。
