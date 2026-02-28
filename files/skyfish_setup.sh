@@ -142,6 +142,20 @@ DB_DATABASE=`grep DB_DATABASE= $DIR/live/.env | cut -d = -f 2`
 DB_USERNAME=`grep DB_USERNAME= $DIR/live/.env | cut -d = -f 2`
 DB_PASSWORD=`grep DB_PASSWORD= $DIR/live/.env | cut -d = -f 2`
 
+# git first pull
+cd $DIR/live; git pull
+cd -
+cd $DIR/test; git pull
+cd -
+
+# permission
+chmod -R a+w $DIR/live/storage
+chmod -R a+w $DIR/live/bootstrap/cache
+
+chmod -R a+w $DIR/test/storage
+chmod -R a+w $DIR/test/bootstrap/cache
+
+
 echo "[mysql]"
 echo "DB_HOST     : $DB_HOST"
 echo "DB_DATABASE : $DB_DATABASE"
@@ -150,14 +164,6 @@ echo
 echo "[migration]"
 echo "php artisan migrate"
 echo
-echo "[permission]"
-echo "chmod -R a+w $DIR/live/storage"
-echo "chmod -R a+w $DIR/live/bootstrap/cache"
-echo
-echo "[git]"
-echo "cd $DIR/live/; git pull"
-echo "cd $DIR/test/; git pull"
-echo 
 echo "[/etc/hosts]"
 echo "127.0.0.1   loopback-$DOMAIN"
 echo "127.0.0.1   loopback-test-$DOMAIN"
@@ -173,11 +179,9 @@ echo "cat $HTTPD_CONF_DIR/vhost-$BASENAME-test.conf"
 echo "sudo service httpd configtest"
 echo "sudo service httpd graceful"
 echo
-echo "[crontab]"
-echo "sudo -u apache crontab -e"
-echo "* * * * * sleep 1 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
-
-
+#echo "[crontab]"
+#echo "sudo -u apache crontab -e"
+#echo "* * * * * sleep 1 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
 echo "[supervisord / queue]"
 echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
 echo "sudo /usr/local/bin/supervisorctl status"
