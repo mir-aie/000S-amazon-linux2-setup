@@ -128,9 +128,13 @@ $SED -i "s/BASENAME/$BASENAME/" systemd.service
 sudo mv systemd.service /etc/systemd/system/mir-$BASENAME.service
 echo "> /etc/systemd/system/mir-$BASENAME.service"
 
+sudo chown root /etc/systemd/system/mir-$BASENAME.*
+sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
+
 sudo systemctl daemon-reload
 sudo systemctl enable --now mir-$BASENAME.timer
 sudo systemctl start mir-$BASENAME.timer
+systemctl list-timers
 
 # mysql
 DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
