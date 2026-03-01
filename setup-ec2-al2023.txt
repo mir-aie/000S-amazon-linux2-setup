@@ -328,10 +328,18 @@ sudo systemctl reload httpd
 /etc/systemd/system/mytask.timer
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now mir-353L-horo-updater-v3.timer
-sudo systemctl start mir-353L-horo-updater-v3.timer
+systemctl list-timers
+journalctl -u mir-353L-horo-updater-v3.timer -f
+systemctl status mir-353L-horo-updater-v3.timer
 
 
+sudo systemctl enable --now mir-skyfish-host-status.timer
+sudo systemctl enable --now mir-skyfish-host-status.service
+sudo systemctl start mir-skyfish-host-status.timer
+
+sudo systemctl enable --now mir-skyfish-remote-update.timer
+sudo systemctl enable --now mir-skyfish-remote-update.service
+sudo systemctl start mir-skyfish-remote-update.timer
 
 AccuracySec
 タイマーの精度を指定する。
@@ -346,9 +354,6 @@ Persistent=Trueを指定するとサービスユニットが最後に実行さ�
 
 
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
-systemctl list-timers
-journalctl -u mir-353L-horo-updater-v3.timer -f
-systemctl status mir-353L-horo-updater-v3.timer
 
 
 #==========================
