@@ -33,8 +33,8 @@ fi
 
 if [ $# -ne 3 ]; then
   echo "これは、新規の本番Laravelプロジェクトをサーバ環境にインストールするスクリプトです。"
-  echo "例： ./sykfish_setup.sh 200L-00-core-area-alert-v1 200L-01-hamamatsu-alert-v1 alert.hamamatsu.odpf.net"
-  echo "                       ↑GITコード                  ↑プロジェクトコード             ↑本番URL"
+  echo "例： ./sykfish_setup.sh git@github.com:mir-ai/t102L-laravel-rd.git t102L-laravel-rd rd.mir-ai.net"
+  echo "                       ↑GITコード                                   ↑プロジェクトコード ↑本番URL"
   echo "deploy にプロジェクトコードに対応した .env が設定されている必要があります"
   exit 1
 fi
@@ -50,7 +50,7 @@ if [ -d $DIR ]; then
     exit
 fi
 
-GIT_SSH="git@github.com:mir-aie/$GITNAME.git"
+GIT_SSH="$GITNAME"
 
 echo "GITコード: $GITNAME"
 echo "プロジェクトコード: $BASENAME"
