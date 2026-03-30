@@ -68,25 +68,27 @@ cd $DIR
 
 git clone $GIT_SSH sky
 cd sky
+/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
+
 composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 sudo chown ec2-user storage/logs/laravel.log
 sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
-/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 git pull
 cd -
 
 git clone $GIT_SSH fish
 cd fish
+/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
+
 composer install --no-dev --optimize-autoloader
 touch storage/logs/laravel.log
 sudo chown ec2-user storage/logs/laravel.log
 sudo chgrp ec2-user storage/logs/laravel.log
 chmod -R a+w storage
 chmod -R a+w bootstrap/cache
-/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 git pull
 cd -
 
