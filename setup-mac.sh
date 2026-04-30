@@ -129,3 +129,8 @@ brew install chromium --cask
 
 # Fonts
 Amazon S3 > バケット > ss-a-alert > fonts > Notoをダウンロートして、mac の font Bookでそれぞれインストール
+
+
+
+設定 > プライバシーとセキュリティ > ローカルネットワーク
+iTermからローカルネットワークへのアクセスを許可 
