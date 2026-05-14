@@ -87,6 +87,9 @@ def exec_update_test(app_code):
 
     update_env(app_code)
 
+    cmd = "sudo killall -USR2 php-fpm"
+    run_cmd(cmd.split())
+
     cmd = "/usr/local/bin/composer install  --optimize-autoloader --no-dev"
     run_cmd(cmd.split())
 
@@ -130,6 +133,9 @@ def exec_update_env(app_code):
     os.chdir(tgt_dir)
 
     update_env(app_code)
+
+    cmd = "sudo killall -USR2 php-fpm"
+    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
     run_cmd(cmd.split())
