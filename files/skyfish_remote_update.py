@@ -87,9 +87,6 @@ def exec_update_test(app_code):
 
     update_env(app_code)
 
-    cmd = "sudo killall -USR2 php-fpm"
-    run_cmd(cmd.split())
-
     cmd = "/usr/local/bin/composer install  --optimize-autoloader --no-dev"
     run_cmd(cmd.split())
 
@@ -126,6 +123,9 @@ def exec_update_test(app_code):
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
     run_cmd(cmd.split())
 
+    cmd = "sudo killall -USR2 php-fpm"
+    run_cmd(cmd.split())
+
     response['message'] = 'Update OK'
 
 def exec_update_env(app_code):
@@ -133,9 +133,6 @@ def exec_update_env(app_code):
     os.chdir(tgt_dir)
 
     update_env(app_code)
-
-    cmd = "sudo killall -USR2 php-fpm"
-    run_cmd(cmd.split())
 
     cmd = "/usr/bin/php artisan optimize:clear"
     run_cmd(cmd.split())
@@ -165,6 +162,9 @@ def exec_update_env(app_code):
     run_cmd(cmd.split())
 
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+    run_cmd(cmd.split())
+
+    cmd = "sudo killall -USR2 php-fpm"
     run_cmd(cmd.split())
 
     response['message'] = '.env update OK'
