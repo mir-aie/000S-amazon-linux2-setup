@@ -117,6 +117,12 @@ sudo pecl install redis
 echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
 
 # php-fpf の起動
+
+# laravelをec2-userで動かす
+sudo cp /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.original
+sudo sed -i "s/user = apache/user = ec2-user/" /etc/php-fpm.d/www.conf
+sudo sed -i "s/group = apache/group = ec2-user/" /etc/php-fpm.d/www.conf
+
 sudo systemctl start php-fpm
 sudo systemctl enable php-fpm
 

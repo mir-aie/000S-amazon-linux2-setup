@@ -5,6 +5,7 @@
 #autostart=true
 #autorestart=true
 #user=apache
+#user=ec2-user
 #numprocs=3
 #redirect_stderr=true
 #stdout_logfile=/var/www/production/BASENAME/live/storage/logs/queue-worker.log
