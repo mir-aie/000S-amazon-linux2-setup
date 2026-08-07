@@ -5,13 +5,14 @@
 # Created   2026/6/27
 # Target    Amazon Linux 2023
 
-export SERVER_NAME=p83-dev-miraie
+export SERVER_NAME=p84-prd1-monitor
 export GIT_USERNAME=miraie
 export GIT_EMAIL=email@miraie.com
-
 export INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
 
 echo "SERVER_NAME=$SERVER_NAME"
+echo "GIT_USERNAME=$GIT_USERNAME"
+echo "GIT_EMAIL=$GIT_EMAIL"
 echo "INSTANCE_ID=$INSTANCE_ID"
 
 # Show HOSTNAME to PROMPT
@@ -20,7 +21,7 @@ echo 'シェルプロンプトにホスト名を表示...'
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=v4-prd1
+export NICKNAME=p84-prd1-monitor
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -71,7 +72,7 @@ sudo systemctl is-enabled httpd
 
 # セキュリティパッチ自動適用
 sudo dnf install -y dnf-automatic
-vi /etc/dnf/automatic.conf
+sudo vi /etc/dnf/automatic.conf
 ーーーーーーーーー
 upgrade_type = security
 apply_updates = yes
@@ -82,15 +83,15 @@ sudo systemctl enable --now dnf-automatic.timer
 sudo systemctl status dnf-automatic-install.timer
 
 # redis
-sudo dnf install redis6
+sudo -y dnf install redis6
 
 
 # PHPのインストール
-echo 'phpをインストール...'
+echo 'php8.4をインストール...'
 
 dnf list --available php*
 
-sudo dnf install -y php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-devel.x86_64 php8.2-gd.x86_64 php8.2-mbstring.x86_64 php8.2-opcache.x86_64 php8.2-xml.x86_64 php8.2-pdo.x86_64 php8.2-pecl-apcu.x86_64 php8.2-fpm.x86_64 php8.2-mysqlnd.x86_64 php8.2-intl.x86_64 php8.2-pecl-igbinary.x86_64 php8.2-pecl-redis6.x86_64 php8.2-pecl-msgpack.x86_64 php8.2-process.x86_64 php8.2-zip.x86_64 php8.2-soap.x86_64 php8.2-gmp.x86_64 
+sudo dnf install -y php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel.x86_64 php8.4-gd.x86_64 php8.4-mbstring.x86_64 php8.4-opcache.x86_64 php8.4-xml.x86_64 php8.4-pdo.x86_64 php8.4-pecl-apcu.x86_64 php8.4-fpm.x86_64 php8.4-mysqlnd.x86_64 php8.4-intl.x86_64 php8.4-pecl-igbinary.x86_64 php8.4-pecl-redis6.x86_64 php8.4-pecl-msgpack.x86_64 php8.4-process.x86_64 php8.4-zip.x86_64 php8.4-soap.x86_64 php8.4-gmp.x86_64 
 
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
@@ -136,10 +137,15 @@ composer --version
 
 # node
 # https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+# ec2-user配下にインストールされる
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install --lts
 node -e "console.log('Running Node.js ' + process.version)"
+
+もうひとつのほうほう(/usr/bin/全体にインストール)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
 
 # mariadb
 sudo dnf install -y mariadb1011 mariadb1011-server 
@@ -162,8 +168,8 @@ sudo mv ffmpeg /usr/local/bin
 sudo mv ffprobe /usr/local/bin
 
 echo 'laravelコンテンツ用ディレクトリ作成...'
-sudo mkdir /var/www/dev
-sudo chmod a+w /var/www/dev
+#sudo mkdir /var/www/dev
+#sudo chmod a+w /var/www/dev
 sudo mkdir /var/www/production
 sudo chmod a+w /var/www/production
 
@@ -187,6 +193,7 @@ sudo chmod 0644 /etc/logrotate.d/laravel_dev.conf
 #https://chariosan.com/2019/11/10/supervisor4_al2/
 echo 'install supervisord'
 sudo dnf install python3-pip
+sudo pip install supervisor
 /usr/local/bin/echo_supervisord_conf > ~/supervisord.conf
 sudo mkdir /etc/supervisord
 sudo mv ~/supervisord.conf /etc/supervisord/supervisord.conf
@@ -206,8 +213,7 @@ sudo mv supervisord.service /etc/systemd/system/
 sudo systemctl start supervisord
 sudo systemctl status supervisord
 sudo systemctl enable supervisord
-
-sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts
+sudo systemctl is-enabled supervisord
 
 cd ~
 mkdir -p bin
@@ -238,8 +244,20 @@ sudo dnf -y install ghostscript
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
 sudo dnf install ./google-chrome-stable_current_x86_64.rpm
 
+sudo mkdir -p /usr/share/httpd/.local/share/applications \
+  /usr/share/httpd/.config \
+  /usr/share/httpd/.cache \
+  /usr/share/httpd/.pki
+
+sudo chown -R apache:apache /usr/share/httpd/.local \
+  /usr/share/httpd/.config \
+  /usr/share/httpd/.cache \
+  /usr/share/httpd/.pki
+  
+
+  
 # https://dev.classmethod.jp/articles/headless-chrome-on-al2023/
-google-chrome --headless --disable-gpu --dump-dom https://example.com/
+google-chrome --headless --disable-gpu --dump-dom https://www.mir-ai.co.jp/
 
 # Fonts
 sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts google-noto-sans-devanagari-fonts google-noto-sans-fonts google-noto-sans-japanese-fonts google-noto-sans-khmer-fonts google-noto-sans-korean-fonts google-noto-sans-mongolian-fonts google-noto-sans-myanmar-fonts google-noto-sans-simplified-chinese-fonts google-noto-sans-sinhala-fonts google-noto-sans-tagalog-fonts google-noto-sans-tai-viet-fonts google-noto-sans-tamil-fonts google-noto-sans-thai-fonts google-noto-sans-traditional-chinese-fonts
@@ -305,17 +323,8 @@ ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
 
 cat ~/.ssh/id_ed25519.pub
 
-git config --global user.name p83-dev-miraie
-git config --global user.email ss@mir-ai.co.jp
-
-
-
-
-
-php redis
-https://github.com/amazonlinux/amazon-linux-2023/issues/328
-
-
+git config --global user.name p84-prd1-monitor
+git config --global user.email obata@mir-ai.co.jp
 
 
 # HTTP graceful restart

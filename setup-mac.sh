@@ -6,11 +6,14 @@ brew install shivammathur/php/php@8.0
 brew install shivammathur/php/php@8.1
 brew install shivammathur/php/php@8.2
 brew install shivammathur/php/php@8.3
-brew link --force --overwrite shivammathur/php/php@8.3
+brew install shivammathur/php/php@8.4
+brew link --force --overwrite shivammathur/php/php@8.2
 
-brew install shivammathur/extensions/igbinary@8.2
-brew install shivammathur/extensions/imagick@8.2
-brew install shivammathur/extensions/redis@8.2
+brew install shivammathur/extensions/igbinary@8.4
+brew install shivammathur/extensions/imagick@8.4
+brew install shivammathur/extensions/redis@8.4
+
+Note that you might need to run composer global update if your PHP version change affects the dependencies of global packages required by Composer.
 
 
 
@@ -18,12 +21,6 @@ node インストール
 https://qiita.com/kyosuke5_20/items/c5f68fc9d89b84c0df09
 
 composer global require laravel/valet
-
-
-
-brew install php@7.4
-pecl install igbinary
-pecl install redis
 
 
 # Cleanup

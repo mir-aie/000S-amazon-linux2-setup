@@ -164,9 +164,6 @@ def exec_update_env(app_code):
     cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
     run_cmd(cmd.split())
 
-    cmd = "sudo killall -USR2 php-fpm"
-    run_cmd(cmd.split())
-
     response['message'] = '.env update OK'
 
 def exec_deploy(app_code):
@@ -222,6 +219,9 @@ def exec_deploy(app_code):
     cmd = "/usr/bin/php artisan queue:restart"
     run_cmd(cmd.split())
 
+    cmd = "sudo killall -USR2 php-fpm"
+    run_cmd(cmd.split())
+
     response['message'] = 'Deploy OK'
 
 def exec_rollback(app_code):
@@ -257,6 +257,9 @@ def exec_rollback(app_code):
         run_cmd(cmd.split())
 
         #print (f"fish goes live")
+
+    cmd = "sudo killall -USR2 php-fpm"
+    run_cmd(cmd.split())
 
     response['message'] = 'Rollback OK'
 
