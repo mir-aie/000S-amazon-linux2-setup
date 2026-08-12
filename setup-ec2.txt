@@ -25,7 +25,7 @@ echo "PUBLIC_IPV4=$PUBLIC_IPV4"
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=v4-prd1
+export NICKNAME=prd-mms04-monitor-p84al23
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
