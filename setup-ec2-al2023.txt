@@ -246,7 +246,7 @@ sudo dnf -y install ghostscript
 
 # chronium
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-sudo dnf install ./google-chrome-stable_current_x86_64.rpm
+sudo dnf -y install ./google-chrome-stable_current_x86_64.rpm
 
 sudo mkdir -p /usr/share/httpd/.local/share/applications \
   /usr/share/httpd/.config \
@@ -327,7 +327,7 @@ ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
 
 cat ~/.ssh/id_ed25519.pub
 
-git config --global user.name p84-prd1-monitor
+git config --global user.name dev-mms02-osaka-p82al23
 git config --global user.email obata@mir-ai.co.jp
 
 
@@ -335,35 +335,33 @@ git config --global user.email obata@mir-ai.co.jp
 sudo apachectl configtest
 sudo systemctl reload httpd
 
+echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
+echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
 
+# crontab よ再び
+sudo dnf install cronie -y
+sudo systemctl enable crond sudo systemctl start crond
 
-/etc/systemd/system/mytask.service
-/etc/systemd/system/mytask.timer
-
-sudo systemctl daemon-reload
-systemctl list-timers
-journalctl -u mir-353L-horo-updater-v3.timer -f
-systemctl status mir-353L-horo-updater-v3.timer
-
-
-sudo systemctl enable --now mir-skyfish-host-status.timer
-sudo systemctl enable --now mir-skyfish-host-status.service
-sudo systemctl start mir-skyfish-host-status.timer
-
-sudo systemctl enable --now mir-skyfish-remote-update.timer
-sudo systemctl enable --now mir-skyfish-remote-update.service
-sudo systemctl start mir-skyfish-remote-update.timer
-
-AccuracySec
-タイマーの精度を指定する。
-
-RandomizedDelaySec
-
-Persistent
-TrueまたはFalse（デフォルト）が指定できる。
-Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
-例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
-尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。
+# /etc/systemd/system/mytask.service
+# /etc/systemd/system/mytask.timer
+# sudo systemctl daemon-reload
+# systemctl list-timers
+# journalctl -u mir-353L-horo-updater-v3.timer -f
+# systemctl status mir-353L-horo-updater-v3.timer
+# sudo systemctl enable --now mir-skyfish-host-status.timer
+# sudo systemctl enable --now mir-skyfish-host-status.service
+# sudo systemctl start mir-skyfish-host-status.timer
+# sudo systemctl enable --now mir-skyfish-remote-update.timer
+# sudo systemctl enable --now mir-skyfish-remote-update.service
+# sudo systemctl start mir-skyfish-remote-update.timer
+# AccuracySec
+# タイマーの精度を指定する。
+# RandomizedDelaySec
+# Persistent
+# TrueまたはFalse（デフォルト）が指定できる。
+# Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
+# 例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
+# 尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。
 
 
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
