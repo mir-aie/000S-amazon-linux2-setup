@@ -1,0 +1,84 @@
+
+httpd -M | grep php
+
+sudo yum clean metadata
+sudo yum install -y php-fpm php-cli php-common
+sudo yum list installed | grep php-fpm
+
+ps -ef | grep php-fpm
+
+sudo vi /etc/httpd/conf.modules.d/15-php.conf
+            #LoadModule php_module modules/libphp.so
+            #LoadModule php_module modules/libphp-zts.so
+
+sudo systemctl reload httpd.service
+sudo systemctl restart httpd.service
+
+httpd -M | grep php
+
+
+#####################################################################
+# php を ec2-user で走らせたい場合
+
+# 必要に応じて、crontabとsupervisordのapache を ec2-userにする
+
+# apacheユーザーから ec2-user に切り替えたい場合
+sudo cp /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.original
+more /etc/php-fpm.d/www.conf.original
+sudo sed -i "s/user = apache/user = ec2-user/" /etc/php-fpm.d/www.conf
+sudo sed -i "s/group = apache/group = ec2-user/" /etc/php-fpm.d/www.conf
+
+sudo systemctl reload php-fpm
+sudo systemctl restart php-fpm
+sudo systemctl enable php-fpm
+sudo systemctl enabled php-fpm
+sudo systemctl is-enabled php-fpm
+
+
+# supervisord
+sudo sed -i "s/user=apache/user=ec2-user/" /etc/supervisord/conf.d/*.conf
+sudo /usr/local/bin/supervisorctl update
+
+# crontab 
+sudo -u apache crontab -l
+ないようを
+sudo -u ec2-user crontab -e
+して、そちらにのコピー
+
+sudo -u apache crontab -e
+で中身を消す。
+
+# 
+cd /var/www/dev
+sudo chown -R ec2-user *
+sudo chgrp -R ec2-user *
+sudo chmod -R a+w */storage/*
+
+cd /var/www/production
+sudo chown -R ec2-user *
+sudo chgrp -R ec2-user *
+sudo chmod -R a+w */storage/*
+
+
+
+== 移行リスト ==================
+	dev-mms01-p82al2
+	dev-mms03-p82al2
+	dev-mms04-monitor-p82al2
+	prd-mms01a-p82al2
+	prd-mms01b-p82al2
+	prd-mms03a-p82al2
+	prd-mms03b-p82al2
+	prd-mms04-monitor-p84al23
+prd-pubsec-log-uploader
+
+	stg-hmpf-ec2-odpf-01
+prd-hmpf-ec2-odpf-01
+prd-hmpf-ec2-odpf-02
+prd-hmpf-ec2-odpf-03
+prd-hmpf-ec2-odpf-04
+
+	v3-dev
+	v3-prd1
+v4-prd2
+v4-prd1

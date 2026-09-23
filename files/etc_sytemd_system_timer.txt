@@ -1,10 +1,24 @@
+#
+# https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
+#
+
 [Unit]
-Description=timer BASENAME
+Description="Run BASENAME every minutes"
 
 [Timer]
-OnUnitActiveSec=1min
-AccuracySec=10s
-RandomizedDelaySec=20s
+OnCalendar=Mon..Fri *-*-* *:*:01
+
+Unit=BASENAME.service
 
 [Install]
 WantedBy=timers.target
+
+
+#  cd /etc/systemd/system/
+#  sudo vi BASENAME.timer
+#  sudo vi BASENAME.service
+#  sudo systemd-analyze verify /etc/systemd/system/BASENAME.*
+#  sudo systemctl daemon-reload
+#  sudo systemctl restart BASENAME.timer
+#  systemctl list-timers BASENAME.timer
+#  journalctl -n 50 -u BASENAME.service

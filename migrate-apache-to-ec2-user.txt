@@ -1,0 +1,35 @@
+# php を apache ではなく ec2-user でうごかす
+# 以前は httpd の php_modules を使っていたのでphpは必ず apache user で動いていたが、
+# php-fpmの導入により、php を ec2-user で動かすことができるようになった
+# それに伴い、crontab, supervisord, php-fpm を apache から ec2-user で切り替える
+
+# うれしいこと： sudo -u apache php artisan  xxx とかしなくてよくなる!!!
+
+
+# supervisord user ec-user
+sudo sed -i "s/^user=apache$/user=ec2-user/g" /etc/supervisord/conf.d/*.conf
+
+# php-fpm user apache
+sudo sed -i "s/^user = apache$/user = ec2-user/g" /etc/php-fpm.d/www.conf
+sudo sed -i "s/^group = apache$/group = ec2-user/g" /etc/php-fpm.d/www.conf
+
+# crontab 
+sudo -u apache crontab -e
+sudo -u ec2-user crontab -e
+
+* * * * * sleep 1 && cd /var/www/production/490L-poskuma-v4/live && php artisan schedule:run >> /dev/null 2>&1
+
+sudo systemctl reload php-fpm
+sudo /usr/local/bin/supervisorctl update
+
+sudo chown -R ec2-user live/storage/ test/storage live/bootstrap/cache test/bootstrap/cache
+sudo chgrp -R ec2-user live/storage/ test/storage live/bootstrap/cache test/bootstrap/cache
+sudo chmod -R a+w live/storage/ test/storage live/bootstrap/cache test/bootstrap/cache
+
+sudo chown -R ec2-user storage/ bootstrap/cache
+sudo chgrp -R ec2-user storage/ bootstrap/cache
+sudo chmod -R a+w storage bootstrap/cache
+
+
+ls -la storage/app/mir_tmp/
+

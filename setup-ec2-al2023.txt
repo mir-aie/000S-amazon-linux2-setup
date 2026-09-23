@@ -130,6 +130,11 @@ sudo systemctl status redis6
 sudo systemctl enable redis6
 sudo systemctl is-enabled redis6
 
+# ジャーナルログの上限を指定
+sudo vi /etc/systemd/journald.conf
+
+SystemMaxUse=500M
+
 
 echo 'gitをインストール...'
 sudo yum install -y git
@@ -213,6 +218,8 @@ sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/;files = relative\/directory\/\*.ini/files = \/etc\/supervisord\/conf.d\/\*.conf/" /etc/supervisord/supervisord.conf
 diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
 curl -o supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt 
+sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
+
 sudo mv supervisord.service /etc/systemd/system/
 sudo systemctl start supervisord
 sudo systemctl status supervisord

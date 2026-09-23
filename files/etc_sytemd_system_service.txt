@@ -1,15 +1,7 @@
 [Unit]
-Description=BASENAME service
-After=network.target
-Requires=network.target
+Description="BASENAME script"
 
 [Service]
-Type=simple
+User=ec2-user
 WorkingDirectory=/var/www/production/BASENAME/live/
-ExecStart=/usr/bin/php /var/www/production/BASENAME/live/artisan schedule:run
-User=apache
-Group=apache
-Type=oneshot
-
-[Install]
-WantedBy=multi-user.target
+ExecStart=/usr/bin/php artisan schedule:run

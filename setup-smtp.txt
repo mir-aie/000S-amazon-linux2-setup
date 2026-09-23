@@ -117,6 +117,10 @@ sudo useradd isehara-fw
 sudo passwd isehara-fw
 3131-3131
 
+sudo useradd isehara-fm
+sudo passwd isehara-fm
+3131-3131
+
 --------------------------------
 
 
