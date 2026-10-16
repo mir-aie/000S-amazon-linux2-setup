@@ -491,8 +491,7 @@ def http_call_post(url, headers = {}, payload = {}):
         message = get_key(error_response, 'message')
         log_write (f"SERVER ERROR: {status_code} : {message}")
 
-        return {}
-
+        return message
 
     exit(0)
 
