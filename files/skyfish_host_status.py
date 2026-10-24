@@ -24,6 +24,9 @@ import datetime
 AWS_INSTANCE_ID_GET_URL = 'http://169.254.169.254/latest/meta-data/instance-id/'
 LOG_FILE = '/home/ec2-user/deploy/host_status.txt'
 API_HASH_SEED = 'm1ra1eAp1Dep10y'
+HTTPD_ACCESS_LOGS = '/var/log/httpd/*.access.log'
+# [18/Oct/2026:07:55:12 +0900] -> ('18/Oct/2026:07:55', '+0900')
+ACCESS_LOG_TIME_RE = re.compile(r'\[(\d{2}/\w{3}/\d{4}:\d{2}:\d{2}):\d{2} ([+-]\d{4})\]')
 
 response = {}
 instance_id = ''
@@ -54,6 +57,7 @@ def main(argvs):
     response['free_mem']  = get_free_mem()
     response['proc_num']  = get_proc_num()
     response['top_proc']  = get_top_proc()
+    response['access_per_min']  = get_access_per_min()
 
     sleep = 1 + random.random() * 5
     print (f"sleep {sleep} sec. ", response)
@@ -143,6 +147,69 @@ def get_top_proc():
                     return command_full
 
     return ''
+
+def get_access_per_min():
+    # 直近の確定した1分（現在が 07:56:30 なら 07:55:00〜07:55:59）
+    minute_1_ago = datetime.datetime.now().astimezone().replace(second=0, microsecond=0) - datetime.timedelta(minutes=1)
+    minute_20_ago = minute_1_ago - datetime.timedelta(minutes=20)
+
+    # httpd の アクセスログの 20分前の日時形式（分まで） 18/Oct/2026:07:35
+    time_20_minutes_ago_str = minute_20_ago.strftime('%d/%b/%Y:%H:%M')
+    # httpd の アクセスログの 1分前の日時形式（分まで） 18/Oct/2026:07:55
+    time_1_minutes_ago_str = minute_1_ago.strftime('%d/%b/%Y:%H:%M')
+
+    # ログの時刻は多少前後するので、20分前の分より5分古い行まで読んだら打ち切る
+    stop_at = minute_20_ago - datetime.timedelta(minutes=5)
+
+    # sudo grep /var/log/httpd/*.access.log だと、ワイルドカードが一般ユーザの権限で展開されて失敗するので、root の sh で展開する
+    log_files = run_cmd(['sudo', 'sh', '-c', f"ls {HTTPD_ACCESS_LOGS}"]).split()
+
+    count_20_minutes_ago = 0
+    count_minutes_ago = 0
+    for log_file in log_files:
+        m20, m = count_access_log(log_file, time_20_minutes_ago_str, time_1_minutes_ago_str, stop_at)
+        count_20_minutes_ago += m20
+        count_minutes_ago += m
+
+    print (f"access {time_20_minutes_ago_str}={count_20_minutes_ago} {time_1_minutes_ago_str}={count_minutes_ago}")
+
+    if (count_minutes_ago > 200):
+        if count_20_minutes_ago * 3 < count_minutes_ago:
+            return count_minutes_ago
+    return ''
+
+def count_access_log(log_file, time_20_minutes_ago_str, time_1_minutes_ago_str, stop_at):
+    # tac でファイルの末尾から逆順に読み、20分前より古い行に達したら打ち切る（ファイル全体は読まない）
+    proc = subprocess.Popen(['sudo', 'tac', log_file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+    count_20_minutes_ago = 0
+    count_minutes_ago = 0
+    last_minute_str = ''
+    for line in proc.stdout:
+        # 1.2.3.4 - - [18/Oct/2026:07:55:12 +0900] "GET / HTTP/1.1" 200 ...
+        m = ACCESS_LOG_TIME_RE.search(line.decode('utf-8', errors='replace'))
+        if not m:
+            continue
+
+        minute_str = m.group(1)
+        if minute_str == time_1_minutes_ago_str:
+            count_minutes_ago += 1
+        elif minute_str == time_20_minutes_ago_str:
+            count_20_minutes_ago += 1
+
+        # 分が変わったときだけ日時をパースして、打ち切り判定する
+        if minute_str != last_minute_str:
+            last_minute_str = minute_str
+            line_time = datetime.datetime.strptime(f"{minute_str} {m.group(2)}", '%d/%b/%Y:%H:%M %z')
+            if line_time < stop_at:
+                break
+
+    # パイプを閉じると tac は SIGPIPE で終了する
+    proc.stdout.close()
+    proc.terminate()
+    proc.wait()
+
+    return count_20_minutes_ago, count_minutes_ago
 
 def run_cmd(cmd):
     #print ('% ' + ' '.join(cmd))
