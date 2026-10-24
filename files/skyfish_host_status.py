@@ -49,6 +49,10 @@ def main(argvs):
     global instance_id
     global response
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no-wait', action='store_true', help='APIを叩く前のランダムなsleepをしない')
+    args = parser.parse_args(argvs)
+
     response = init_response()
     response['aws_account_id'] = get_aws_account_id()
     response['instance_id'] = get_instance_id()
@@ -59,11 +63,13 @@ def main(argvs):
     response['top_proc']  = get_top_proc()
     response['access_per_min']  = get_access_per_min()
 
-    sleep = 1 + random.random() * 5
-    print (f"sleep {sleep} sec. ", response)
-
     # 各サーバがAPIを叩くタイミングをずらす
-    time.sleep(sleep)
+    if args.no_wait:
+        print ("no wait. ", response)
+    else:
+        sleep = 1 + random.random() * 5
+        print (f"sleep {sleep} sec. ", response)
+        time.sleep(sleep)
 
     put_host_status()
 
@@ -175,8 +181,8 @@ def get_access_per_min():
 
     if (count_minutes_ago > 200):
         if count_20_minutes_ago * 3 < count_minutes_ago:
-            return count_minutes_ago
-    return ''
+            return count_minutes_ago + '!'
+    return count_minutes_ago
 
 def count_access_log(log_file, time_20_minutes_ago_str, time_1_minutes_ago_str, stop_at):
     # tac でファイルの末尾から逆順に読み、20分前より古い行に達したら打ち切る（ファイル全体は読まない）
@@ -205,8 +211,8 @@ def count_access_log(log_file, time_20_minutes_ago_str, time_1_minutes_ago_str, 
                 break
 
     # パイプを閉じると tac は SIGPIPE で終了する
+    # （sudo のプロセスは root なので、ec2-user から terminate() / kill() はできない）
     proc.stdout.close()
-    proc.terminate()
     proc.wait()
 
     return count_20_minutes_ago, count_minutes_ago
