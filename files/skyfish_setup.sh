@@ -162,6 +162,7 @@ echo "[mysql]"
 echo "DB_HOST     : $DB_HOST"
 echo "DB_DATABASE : $DB_DATABASE"
 echo "DB_USERNAME : $DB_USERNAME"
+echo "DB_PASSWORD : $DB_PASSWORD"
 echo
 echo "[migration]"
 echo "php artisan migrate"

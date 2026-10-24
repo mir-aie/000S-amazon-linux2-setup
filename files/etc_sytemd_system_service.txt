@@ -1,5 +1,5 @@
 [Unit]
-Description="BASENAME script"
+Description="BASENAME timer script"
 
 [Service]
 User=ec2-user
