@@ -67,7 +67,7 @@ def main(argvs):
     if args.no_wait:
         print ("no wait. ", response)
     else:
-        sleep = 1 + random.random() * 5
+        sleep = 1 + random.random() * 50
         print (f"sleep {sleep} sec. ", response)
         time.sleep(sleep)
 

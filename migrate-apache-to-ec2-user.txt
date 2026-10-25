@@ -5,6 +5,7 @@
 
 # うれしいこと： sudo -u apache php artisan  xxx とかしなくてよくなる!!!
 
+ps -ef | grep php
 
 # supervisord user ec-user
 sudo sed -i "s/^user=apache$/user=ec2-user/g" /etc/supervisord/conf.d/*.conf
@@ -13,9 +14,14 @@ sudo sed -i "s/^user=apache$/user=ec2-user/g" /etc/supervisord/conf.d/*.conf
 sudo sed -i "s/^user = apache$/user = ec2-user/g" /etc/php-fpm.d/www.conf
 sudo sed -i "s/^group = apache$/group = ec2-user/g" /etc/php-fpm.d/www.conf
 
+# service, timer
+sudo sed -i "s/^User=apache$/User=ec2-user/g" /etc/systemd/system/*L-*.timer
+sudo sed -i "s/^User=apache$/User=ec2-user/g" /etc/systemd/system/*L-*.service
+
 # crontab 
-sudo -u apache crontab -e
+sudo -u apache crontab -l
 sudo -u ec2-user crontab -e
+sudo -u apache crontab -e
 
 * * * * * sleep 1 && cd /var/www/production/490L-poskuma-v4/live && php artisan schedule:run >> /dev/null 2>&1
 
@@ -29,7 +35,6 @@ sudo chmod -R a+w live/storage/ test/storage live/bootstrap/cache test/bootstrap
 sudo chown -R ec2-user storage/ bootstrap/cache
 sudo chgrp -R ec2-user storage/ bootstrap/cache
 sudo chmod -R a+w storage bootstrap/cache
-
 
 ls -la storage/app/mir_tmp/
 

@@ -484,12 +484,12 @@ def http_call_post(url, headers = {}, payload = {}):
 
     except HTTPError as e:
         error_desc = e.read().decode("utf-8").replace("\n", "")
-        log_write ("◇ERROR_RESPONSE : " + error_desc)
+        log_write (f"◇ERROR_RESPONSE : {url}: " + error_desc)
 
         error_response = json.loads(error_desc)
         status_code = get_key(error_response, 'status_code')
         message = get_key(error_response, 'message')
-        log_write (f"SERVER ERROR: {status_code} : {message}")
+        log_write (f"SERVER ERROR: {url}: {status_code} : {message}")
 
         return message
 
