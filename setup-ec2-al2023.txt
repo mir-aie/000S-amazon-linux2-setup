@@ -1,24 +1,9 @@
 
-#!/usr/bin/bash
-
-# Author    obata@mir-ai.co.jp
-# Created   2026/6/27
-# Target    Amazon Linux 2023
-
-export SERVER_NAME=dev-mms02-osaka-p82al23
-export GIT_USERNAME=miraie
-export GIT_EMAIL=email@miraie.com
-export INSTANCE_ID=`curl 169.254.169.254/latest/meta-data/instance-id/`
-
-echo "SERVER_NAME=$SERVER_NAME"
-echo "GIT_USERNAME=$GIT_USERNAME"
-echo "GIT_EMAIL=$GIT_EMAIL"
-echo "INSTANCE_ID=$INSTANCE_ID"
 
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
-export NICKNAME=dev-mms02-osaka-p82al23
+export NICKNAME=%SERVER_NAME_HERE%
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -69,11 +54,20 @@ sudo systemctl is-enabled httpd
 
 # セキュリティパッチ自動適用
 sudo dnf install -y dnf-automatic
+
+
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+
 sudo vi /etc/dnf/automatic.conf
-ーーーーーーーーー
+
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+**** 以下をvi等で編集
+
 upgrade_type = security
 apply_updates = yes
-ーーーーーーーーー
+
+**** /編集してください
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
 
 sudo systemctl start dnf-automatic-install.timer
 sudo systemctl enable --now dnf-automatic.timer
@@ -111,7 +105,14 @@ echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
 # PHPREDIS
 sudo pecl install redis
----- igbinaryはnoにする
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+**** プロンプトが出たらエンター
+
+**** 基本エンター。igbinaryはnoにする
+
+**** /プロンプトが出たらエンター
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+
 echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
 
 # php-fpf の起動
@@ -133,7 +134,13 @@ sudo systemctl is-enabled redis6
 # ジャーナルログの上限を指定
 sudo vi /etc/systemd/journald.conf
 
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+**** 以下をvi等で編集
+
 SystemMaxUse=500M
+
+**** /編集してください
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
 
 
 echo 'gitをインストール...'
@@ -151,10 +158,6 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install --lts
 node -e "console.log('Running Node.js ' + process.version)"
-
-もうひとつのほうほう(/usr/bin/全体にインストール)
-#curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-#sudo dnf install -y nodejs
 
 # mariadb
 sudo dnf install -y mariadb1011 mariadb1011-server 
@@ -245,98 +248,38 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 chmod +x *.sh
 chmod +x *.py
 
+# skyfish
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_service.txt
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_timer.txt
+
+sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
+
+
+# 全環境
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-service.txt
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-timer.txt
+
+sudo mv etc_sytemd_system_mir-skyfish-host-status-service.txt /etc/systemd/system/mir-skyfish-host-status.service
+sudo mv etc_sytemd_system_mir-skyfish-host-status-timer.txt /etc/systemd/system/mir-skyfish-host-status.timer
+
+#
+sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-host-status.*
+sudo systemctl daemon-reload
+sudo systemctl enable mir-skyfish-host-status.timer       # 初回のみ：起動時に自動で有効にする
+sudo systemctl restart mir-skyfish-host-status.timer
+systemctl list-timers mir-skyfish-host-status.timer       # 次回の実行予定を確認
+journalctl -n 50 -u mir-skyfish-host-status.service       # 実行ログを確認
+
+# 雛形をコピー
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
+
+sudo mv etc_sytemd_system_BASENAME_service.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.service
+sudo mv etc_sytemd_system_BASENAME_service.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.timer
+
 sudo pip install boto
 sudo pip3 install boto3
-
-# Ghostscript
-sudo dnf -y install ghostscript
-
-# chronium
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-sudo dnf -y install ./google-chrome-stable_current_x86_64.rpm
-
-sudo mkdir -p /usr/share/httpd/.local/share/applications \
-  /usr/share/httpd/.config \
-  /usr/share/httpd/.cache \
-  /usr/share/httpd/.pki
-
-sudo chown -R apache:apache /usr/share/httpd/.local \
-  /usr/share/httpd/.config \
-  /usr/share/httpd/.cache \
-  /usr/share/httpd/.pki
-  
-
-  
-# https://dev.classmethod.jp/articles/headless-chrome-on-al2023/
-google-chrome --headless --disable-gpu --dump-dom https://www.mir-ai.co.jp/
-
-# Fonts
-sudo dnf -y install ipa-gothic-fonts ipa-mincho-fonts ipa-pgothic-fonts ipa-pmincho-fonts google-noto-sans-devanagari-fonts google-noto-sans-fonts google-noto-sans-japanese-fonts google-noto-sans-khmer-fonts google-noto-sans-korean-fonts google-noto-sans-mongolian-fonts google-noto-sans-myanmar-fonts google-noto-sans-simplified-chinese-fonts google-noto-sans-sinhala-fonts google-noto-sans-tagalog-fonts google-noto-sans-tai-viet-fonts google-noto-sans-tamil-fonts google-noto-sans-thai-fonts google-noto-sans-traditional-chinese-fonts
-
-fc-cache -fv
-fc-list
-
-# TODO: Polly server daemonize
-
-# TODO: Postfix
-
-
-# mecab
-https://zenn.dev/yukiko_bass/scraps/0f91d67da6d444
-
-sudo dnf groupinstall -y "Development Tools"
-
-pip3 install mecab-python3
-curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
-
-# 形態素解析 Mecab 本体
-wget -O mecab-0.996.tar.gz https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/mecab-0.996.tar.gz
-tar xzf mecab-0.996.tar.gz
-cd mecab-0.996
-./configure
-make
-make check
-sudo make install
-cd -
-rm -rf mecab-0.996*
-
-# 形態素解析 Mecab 標準辞書
-wget -O mecab-ipadic-2.7.0-20070610.tar.gz https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/mecab-ipadic-2.7.0-20070610.tar.gz
-tar xvf mecab-ipadic-2.7.0-20070610.tar.gz
-cd mecab-ipadic-2.7.0-20070610
-./configure --with-charset=utf-8
-make
-make install
-sudo make install
-
-# 形態素解析 Mecab 追加辞書
-./mecab-ipadic-2.7.0-20070610/bin/install-mecab-ipadic-neologd -n -y
-bin/install-mecab-ipadic-neologd -n -y
-sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
-
-
-
-git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
-./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -y
-
-sudo sed -i -e "s|^dicdir.*$|dicdir = /usr/local/lib/mecab/dic/mecab-ipadic-neologd|" $(mecab-config --sysconfdir)/mecabrc
-
-cd ~/bin
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/mecab_update_dict_neologd.sh
-chmod a+x mecab_update_dict_neologd.sh
-
-
-#######
-# 以下手動
-
-echo 'git用のsshの登録'
-ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
-
-cat ~/.ssh/id_ed25519.pub
-
-git config --global user.name dev-mms02-osaka-p82al23
-git config --global user.email obata@mir-ai.co.jp
-
 
 # HTTP graceful restart
 sudo apachectl configtest
@@ -349,61 +292,36 @@ echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bas
 sudo dnf install cronie -y
 sudo systemctl enable crond sudo systemctl start crond
 
-# /etc/systemd/system/mytask.service
-# /etc/systemd/system/mytask.timer
-# sudo systemctl daemon-reload
-# systemctl list-timers
-# journalctl -u mir-353L-horo-updater-v3.timer -f
-# systemctl status mir-353L-horo-updater-v3.timer
-# sudo systemctl enable --now mir-skyfish-host-status.timer
-# sudo systemctl enable --now mir-skyfish-host-status.service
-# sudo systemctl start mir-skyfish-host-status.timer
-# sudo systemctl enable --now mir-skyfish-remote-update.timer
-# sudo systemctl enable --now mir-skyfish-remote-update.service
-# sudo systemctl start mir-skyfish-remote-update.timer
-# AccuracySec
-# タイマーの精度を指定する。
-# RandomizedDelaySec
-# Persistent
-# TrueまたはFalse（デフォルト）が指定できる。
-# Persistent=Trueを指定するとサービスユニットが最後に実行された時刻が保存されてタイマーが非アクディブで実行されなかったイベントがアクティブになった瞬間に実行される。
-# 例えば電源をオフにしていて実行されなかったイベントが電源オンと同時に実行される。
-# 尚、このオプションはOnCalendarで指定されたタイマーでのみ指定が可能なので注意。
 
 
-# https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
+#######
+# 以下手動
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+**** 以下手動
+
+echo 'git用のsshの登録'
+ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
+
+cat ~/.ssh/id_ed25519.pub
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+**** 表示された公開鍵をサーバ名とともにメモする
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
+
+git config --global user.name %SERVER_NAME_HERE%
+git config --global user.email obata@mir-ai.co.jp
 
 
-#==========================
-#  mir-353L-horo-updater-v3.timer
-#
+#　本番環境のみ（遠隔でプログラムを最新にするスクリプトを定期起動するバッチ）
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-service.txt
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-timer.txt
 
-[Unit]
-Description=timer 353L-horo-updater-v3
+sudo mv etc_sytemd_system_mir-skyfish-remote-update-service.txt /etc/systemd/system/mir-skyfish-remote-update.service
+sudo mv etc_sytemd_system_mir-skyfish-remote-update-timer.txt /etc/systemd/system/mir-skyfish-remote-update.timer
 
-[Timer]
-OnUnitActiveSec=1min
-AccuracySec=10s
+sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-remote-update.*
+sudo systemctl daemon-reload
+sudo systemctl enable mir-skyfish-remote-update.timer       # 初回のみ：起動時に自動で有効にする
+sudo systemctl restart mir-skyfish-remote-update.timer
+systemctl list-timers mir-skyfish-remote-update.timer       # 次回の実行予定を確認
+journalctl -n 50 -u mir-skyfish-remote-update.service       # 実行ログを確認
 
-[Install]
-WantedBy=timers.target
-
-#==========================
-#  mir-353L-horo-updater-v3.service
-#
-
-[Unit]
-Description=353L-horo-updater-v3
-After=network.target
-Requires=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/var/www/production/353L-horo-updater-v3/live/
-ExecStart=/usr/bin/php /var/www/production/353L-horo-updater-v3/live/artisan schedule:run
-User=apache
-Group=apache
-Type=oneshot
-
-[Install]
-WantedBy=multi-user.target
