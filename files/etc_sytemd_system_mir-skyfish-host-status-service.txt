@@ -1,0 +1,30 @@
+#
+# Skyfish ホスト状態を送信するサービス
+# mir-skyfish-host-status.timer から毎分起動される（単体で常駐はしない）
+#
+# /etc/systemd/system/mir-skyfish-host-status.service
+
+[Unit]
+Description="Skyfish host update"
+# ネットワークが使える状態になってから実行する
+After=network.target
+Requires=network.target
+
+[Service]
+# 実行時のカレントディレクトリ
+WorkingDirectory=/home/ec2-user/bin/
+# 実行するスクリプト
+ExecStart=/home/ec2-user/bin/skyfish_host_status.py
+# ec2-user 権限で実行する
+User=ec2-user
+Group=ec2-user
+# 1回実行して終了する
+Type=oneshot
+
+#  cd /etc/systemd/system/
+#  sudo vi mir-skyfish-host-status.service
+#  sudo vi mir-skyfish-host-status.timer
+#  sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-host-status.*
+#  sudo systemctl daemon-reload
+#  sudo systemctl start mir-skyfish-host-status.service      # 手動で1回だけ実行して動作確認
+#  journalctl -n 50 -u mir-skyfish-host-status.service
