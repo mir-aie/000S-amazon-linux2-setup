@@ -1,7 +1,29 @@
+#
+# BASENAME サービス
+#
+# /etc/systemd/system/BASENAME.service
+
 [Unit]
-Description="BASENAME timer script"
+Description="BASENAME"
+# ネットワークが使える状態になってから実行する
+After=network.target
+Requires=network.target
 
 [Service]
+# 実行時のカレントディレクトリ
+WorkingDirectory=/home/ec2-user/bin/
+# 実行するスクリプト
+ExecStart=/home/ec2-user/bin/BASENAME.py
+# ec2-user 権限で実行する
 User=ec2-user
-WorkingDirectory=/var/www/production/BASENAME/live/
-ExecStart=/usr/bin/php artisan schedule:run
+Group=ec2-user
+# 1回実行して終了する
+Type=oneshot
+
+#  cd /etc/systemd/system/
+#  sudo vi BASENAME.service
+#  sudo vi BASENAME.timer
+#  sudo systemd-analyze verify /etc/systemd/system/BASENAME.*
+#  sudo systemctl daemon-reload
+#  sudo systemctl start BASENAME.service      # 手動で1回だけ実行して動作確認
+#  journalctl -n 50 -u BASENAME.service

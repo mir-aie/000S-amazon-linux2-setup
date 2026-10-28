@@ -1,16 +1,23 @@
 #
+# BASENAMEスクリプト（BASENAME.service）を起動するタイマー
+#
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
 #
+# /etc/systemd/system/BASENAME.timer
 
 [Unit]
 Description="Run BASENAME every minutes"
 
 [Timer]
-OnCalendar=Mon..Fri *-*-* *:*:01
+# 毎日（土日を含む）毎分 01 秒に実行する
+# 書式は 曜日 年-月-日 時:分:秒（曜日を省略すると毎日）
+OnCalendar=*-*-* *:*:01
 
+# 起動するサービス
 Unit=BASENAME.service
 
 [Install]
+# enable するとサーバー起動時にタイマーが自動で有効になる
 WantedBy=timers.target
 
 
@@ -19,6 +26,7 @@ WantedBy=timers.target
 #  sudo vi BASENAME.service
 #  sudo systemd-analyze verify /etc/systemd/system/BASENAME.*
 #  sudo systemctl daemon-reload
+#  sudo systemctl enable BASENAME.timer       # 初回のみ：起動時に自動で有効にする
 #  sudo systemctl restart BASENAME.timer
-#  systemctl list-timers BASENAME.timer
-#  journalctl -n 50 -u BASENAME.service
+#  systemctl list-timers BASENAME.timer       # 次回の実行予定を確認
+#  journalctl -n 50 -u BASENAME.service       # 実行ログを確認
