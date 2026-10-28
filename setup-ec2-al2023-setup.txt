@@ -15,6 +15,7 @@ echo 'タイムゾーン更新...'
 sudo timedatectl set-timezone Asia/Tokyo
 
 echo '言語設定...'
+sudo dnf install -y glibc-langpack-ja
 sudo localectl set-locale LANG=ja_JP.UTF-8
 
 echo 'httpdをインストール...'
@@ -274,7 +275,7 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
 
 sudo mv etc_sytemd_system_BASENAME_service.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.service
-sudo mv etc_sytemd_system_BASENAME_service.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.timer
+sudo mv etc_sytemd_system_BASENAME_timer.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.timer
 
 sudo pip install boto
 sudo pip3 install boto3
@@ -288,7 +289,8 @@ echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bas
 
 # crontab よ再び
 sudo dnf install cronie -y
-sudo systemctl enable crond sudo systemctl start crond
+sudo systemctl enable crond
+sudo systemctl start crond
 
 
 

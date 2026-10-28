@@ -1,0 +1,124 @@
+cat > ~/check-setup.sh <<'SCRIPT'
+#!/bin/bash
+# AL2023 セットアップ確認（ec2-user で実行）
+ok(){ echo -e "\e[32m[OK]\e[0m $*"; }
+ng(){ echo -e "\e[31m[NG]\e[0m $*"; }
+chk(){ local d="$1"; shift; if eval "$@" >/dev/null 2>&1; then ok "$d"; else ng "$d"; fi; }
+sec(){ echo; echo "===== $* ====="; }
+
+sec 基本設定
+chk "prompt.sh あり"           "test -s /etc/profile.d/prompt.sh"
+chk "/etc/bashrc に NICKNAME"   "grep -q 'u@\$NICKNAME' /etc/bashrc"
+echo "     NICKNAME=$NICKNAME"
+chk "タイムゾーン Asia/Tokyo"    "[ \"\$(timedatectl show -p Timezone --value)\" = Asia/Tokyo ]"
+chk "LANG=ja_JP.UTF-8"          "localectl status | grep -q 'LANG=ja_JP.UTF-8'"
+chk "ja_JP ロケールが使える"     "locale -a | grep -qi '^ja_JP.utf8'"
+echo "     未適用の更新数: $(dnf check-update -q 2>/dev/null | grep -c '^[a-zA-Z0-9]')"
+
+sec サービス（起動中 / 自動起動）
+for s in httpd php-fpm redis6 mariadb supervisord crond; do
+  a=$(systemctl is-active $s 2>&1); e=$(systemctl is-enabled $s 2>&1)
+  [ "$a" = active ] && [ "$e" = enabled ] && ok "$s ($a/$e)" || ng "$s ($a/$e)"
+done
+
+sec タイマー
+for t in dnf-automatic.timer dnf-automatic-install.timer mir-skyfish-host-status.timer mir-skyfish-remote-update.timer; do
+  a=$(systemctl is-active $t 2>&1); e=$(systemctl is-enabled $t 2>&1)
+  [ "$a" = active ] && ok "$t ($a/$e)" || ng "$t ($a/$e)  ※remote-update は本番のみ"
+done
+systemctl list-timers --all --no-pager | grep -E 'dnf-automatic|skyfish'
+
+sec dnf-automatic
+chk "upgrade_type = security" "grep -Eq '^upgrade_type *= *security' /etc/dnf/automatic.conf"
+chk "apply_updates = yes"     "grep -Eq '^apply_updates *= *yes' /etc/dnf/automatic.conf"
+
+sec httpd
+for f in /var/www/html/index.html /etc/httpd/conf.d/{security,security_strict,vhost-000,keepalive}.conf; do
+  chk "$f（存在・404でない）" "test -s $f && ! grep -q '404: Not Found' $f"
+done
+chk "ログに X-Forwarded-For"   "grep -q 'X-Forwarded-For}i\" combined' /etc/httpd/conf/httpd.conf"
+chk "h2 モジュール無効"         "! httpd -M 2>/dev/null | grep -q http2_module"
+chk "KeepAlive On"              "grep -q '^KeepAlive On' /etc/httpd/conf.d/keepalive.conf"
+chk "KeepAliveTimeout 120"      "grep -q '^KeepAliveTimeout 120' /etc/httpd/conf.d/keepalive.conf"
+chk "configtest Syntax OK"      "sudo apachectl configtest 2>&1 | grep -q 'Syntax OK'"
+echo "     $(curl -sI http://localhost/ | head -1)"
+
+sec PHP
+php -v | head -1
+w=$(php -v 2>&1 | grep -iE 'warning|already loaded|unable to load')
+[ -z "$w" ] && ok "PHP 起動時の警告なし" || { ng "PHP 起動時に警告あり"; echo "$w"; }
+for m in bcmath gd mbstring 'Zend OPcache' xml pdo_mysql mysqlnd intl apcu igbinary redis msgpack posix zip soap gmp imagick; do
+  chk "拡張 $m" "php -m | grep -qix '$m'"
+done
+chk "expose_php = Off" "php -i | grep -q '^expose_php => Off'"
+while read k v; do
+  a=$(php -r "echo ini_get('$k');")
+  [ "$a" = "$v" ] && ok "php.ini $k=$a" || ng "php.ini $k=$a（期待値 $v）"
+done <<'EOF'
+memory_limit 512M
+post_max_size 16M
+upload_max_filesize 16M
+max_input_vars 5000
+max_file_uploads 50
+date.timezone Asia/Tokyo
+EOF
+chk "php-fpm user = ec2-user"   "grep -q '^user = ec2-user' /etc/php-fpm.d/www.conf"
+chk "php-fpm group = ec2-user"  "grep -q '^group = ec2-user' /etc/php-fpm.d/www.conf"
+chk "php-fpm ワーカーが ec2-user で動いている" "ps -o user= -C php-fpm | grep -q ec2-user"
+pecl list 2>/dev/null
+
+sec Redis / MariaDB
+chk "redis ping → PONG"            "redis6-cli ping | grep -q PONG"
+mysql --version
+chk "MariaDB 接続"                  "sudo mysql -e 'SELECT 1'"
+chk "匿名ユーザーなし（secure_installation）" "[ -z \"\$(sudo mysql -N -e \"SELECT 1 FROM mysql.user WHERE user=''\")\" ]"
+chk "test DB なし（secure_installation）"    "! sudo mysql -N -e 'SHOW DATABASES' | grep -qx test"
+
+sec journald
+chk "SystemMaxUse=500M" "grep -q '^SystemMaxUse=500M' /etc/systemd/journald.conf"
+journalctl --disk-usage
+
+sec ツール
+source ~/.nvm/nvm.sh 2>/dev/null
+for c in "git --version" "composer --version" "node -v" "npm -v" "sox --version" \
+         "/usr/local/bin/ffmpeg -version" "/usr/local/bin/ffprobe -version" \
+         "/usr/local/bin/supervisorctl version" "convert -version"; do
+  out=$($c 2>/dev/null | head -1); [ -n "$out" ] && ok "$out" || ng "$c"
+done
+chk "python: boto3"  "python3 -c 'import boto3'"
+chk "python: boto"   "python3 -c 'import boto'"
+
+sec ディレクトリ / logrotate
+chk "/var/www/dev 書込可"  "[ -d /var/www/dev ] && [ \"\$(stat -c %a /var/www/dev)\" = 777 ]"
+for f in /etc/logrotate.d/laravel.conf /etc/logrotate.d/laravel_dev.conf; do
+  chk "$f root:root 644" "[ \"\$(stat -c '%U:%G %a' $f)\" = 'root:root 644' ]"
+  chk "$f 構文OK"        "sudo logrotate -d $f 2>&1 | grep -qv 'error'"
+done
+
+sec supervisord
+c=/etc/supervisord/supervisord.conf
+chk "[inet_http_server] 有効" "grep -q '^\[inet_http_server\]' $c"
+chk "port=127.0.0.1:9001"     "grep -q '^port=127.0.0.1:9001' $c"
+chk "logfile=/var/log"        "grep -q 'logfile=/var/log/supervisord.log' $c"
+chk "[include] conf.d"        "grep -q '^files = /etc/supervisord/conf.d/\*.conf' $c"
+chk "9001 応答あり"            "curl -s -o /dev/null http://127.0.0.1:9001/"
+sudo /usr/local/bin/supervisorctl -c $c status
+
+sec ~/bin スクリプト
+for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py skyfish_setup_vhost.sh \
+         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh clamscan.sh skyfish_setup_stage.py freshclam.conf; do
+  chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
+done
+chk "*.sh / *.py に実行権" "[ -z \"\$(find ~/bin \( -name '*.sh' -o -name '*.py' \) ! -perm -u+x)\" ]"
+
+sec systemd ユニット
+sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-*.{service,timer} 2>&1 | grep -v '^$' || ok "verify エラーなし"
+ls -l /etc/systemd/system/ | grep -iE 'skyfish|BASENAME|supervisord'
+
+sec その他
+chk "alias lg / lt" "grep -q 'alias lg=' ~/.bash_profile && grep -q 'alias lt=' ~/.bash_profile"
+chk "ssh 鍵あり"     "test -s ~/.ssh/id_ed25519.pub"
+chk "GitHub ssh 認証" "ssh -T -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | grep -q 'successfully authenticated'"
+echo "     git user.name=$(git config --global user.name) / email=$(git config --global user.email)"
+SCRIPT
+chmod +x ~/check-setup.sh && ~/check-setup.sh
