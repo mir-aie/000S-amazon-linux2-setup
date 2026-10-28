@@ -323,3 +323,5 @@ sudo systemctl restart mir-skyfish-remote-update.timer
 systemctl list-timers mir-skyfish-remote-update.timer       # 次回の実行予定を確認
 journalctl -n 50 -u mir-skyfish-remote-update.service       # 実行ログを確認
 
+# 再起動しないと色々おかしい
+sudo reboot now
