@@ -325,5 +325,20 @@ sudo systemctl restart mir-skyfish-remote-update.timer
 systemctl list-timers mir-skyfish-remote-update.timer       # 次回の実行予定を確認
 journalctl -n 50 -u mir-skyfish-remote-update.service       # 実行ログを確認
 
+
+
+# Laravelの個人情報閲覧ログをCloudWatchにコピーする
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/opt_aws_amazon-cloudwatch-agent_etc-amazon-cloudwatch-agent.txt
+sudo mv opt_aws_amazon-cloudwatch-agent_etc-amazon-cloudwatch-agent.txt /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+sudo systemctl enable amazon-cloudwatch-agent.service
+sudo systemctl is-enabled amazon-cloudwatch-agent.service
+sudo systemctl status amazon-cloudwatch-agent.service
+
+
 # 再起動しないと色々おかしい
 sudo reboot now
