@@ -18,6 +18,7 @@ HTTPD_CONF_DIR=/etc/httpd/conf.d
 EXEC_USER=ec2-user
 SED=sed
 PWD=`pwd`
+PERMS_SCRIPT=/home/ec2-user/bin/laravel_shared_perms.sh
 
 if [ -d /Users/obatasusumu ]; then
     BASEDIR=/Users/obatasusumu/tmp/skyfish/
@@ -30,6 +31,17 @@ if [ ! `whoami` = $EXEC_USER ]; then
     echo "エラー: $EXEC_USER になって実行してください。例: sudo su --login $EXEC_USER"
     exit
 fi
+
+# storage / bootstrap/cache を apache と ec2-user の両方で読み書きできるようにする
+set_laravel_perms() {
+    if [ -x $PERMS_SCRIPT ]; then
+        $PERMS_SCRIPT $1
+    else
+        touch $1/storage/logs/laravel.log
+        chmod -R a+w $1/storage
+        chmod -R a+w $1/bootstrap/cache
+    fi
+}
 
 if [ $# -ne 3 ]; then
   echo "これは、新規の本番Laravelプロジェクトをサーバ環境にインストールするスクリプトです。"
@@ -71,11 +83,7 @@ cd sky
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 
 composer install --no-dev --optimize-autoloader
-touch storage/logs/laravel.log
-sudo chown ec2-user storage/logs/laravel.log
-sudo chgrp ec2-user storage/logs/laravel.log
-chmod -R a+w storage
-chmod -R a+w bootstrap/cache
+set_laravel_perms .
 git pull
 cd -
 
@@ -84,11 +92,7 @@ cd fish
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 
 composer install --no-dev --optimize-autoloader
-touch storage/logs/laravel.log
-sudo chown ec2-user storage/logs/laravel.log
-sudo chgrp ec2-user storage/logs/laravel.log
-chmod -R a+w storage
-chmod -R a+w bootstrap/cache
+set_laravel_perms .
 git pull
 cd -
 
@@ -151,11 +155,8 @@ cd $DIR/test; git pull
 cd -
 
 # permission
-chmod -R a+w $DIR/live/storage
-chmod -R a+w $DIR/live/bootstrap/cache
-
-chmod -R a+w $DIR/test/storage
-chmod -R a+w $DIR/test/bootstrap/cache
+set_laravel_perms $DIR/live
+set_laravel_perms $DIR/test
 
 
 echo "[mysql]"

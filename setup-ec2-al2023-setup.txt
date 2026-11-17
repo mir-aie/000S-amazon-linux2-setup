@@ -116,10 +116,23 @@ echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
 
 # php-fpf の起動
 
-# laravelをec2-userで動かす
+# laravelをapacheで動かす
 sudo cp /etc/php-fpm.d/www.conf /etc/php-fpm.d/www.conf.original
-sudo sed -i "s/user = apache/user = ec2-user/" /etc/php-fpm.d/www.conf
-sudo sed -i "s/group = apache/group = ec2-user/" /etc/php-fpm.d/www.conf
+
+# apache と ec2-user の両方で Laravel のログ・一時ファイルを読み書きできるようにする
+# 1. ec2-user を apache グループに入れる（再ログイン後に有効）
+sudo usermod -aG apache ec2-user
+# 2. php-fpm が作るファイルをグループ書込み可にする (umask 002)
+sudo mkdir -p /etc/systemd/system/php-fpm.service.d
+printf '[Service]\nUMask=0002\n' | sudo tee /etc/systemd/system/php-fpm.service.d/umask.conf
+sudo systemctl daemon-reload
+# 3. ec2-user (artisan / cron / 手作業) が作るファイルもグループ書込み可にする
+echo 'umask 0002' >> ~/.bashrc
+# 4. ACL コマンド (storage へのデフォルトACL設定用 → laravel_shared_perms.sh)
+sudo dnf install -y acl
+# 注意: php-fpm / httpd は systemd の PrivateTmp=true で動くため、
+#       apache から見た /tmp と ec2-user から見た /tmp は別物。
+#       共有したい一時ファイルは /tmp ではなく storage/app/mir_tmp 等に作ること。
 
 sudo systemctl start php-fpm
 sudo systemctl enable php-fpm
@@ -170,13 +183,36 @@ sudo mysql_secure_installation
 # sox
 sudo dnf install -y sox
 
-# ffmpeg
-
-curl -o ffmpeg https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffmpeg
-curl -o ffprobe https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffprobe
-chmod a+x ffmpeg ffprobe
-sudo mv ffmpeg /usr/local/bin
-sudo mv ffprobe /usr/local/bin
+# ffmpeg / ffprobe
+# AL2023 の標準リポジトリには ffmpeg が無いため、静的ビルド (https://johnvansickle.com/ffmpeg/) を入れる
+# x86_64 / aarch64 (Graviton) を自動判別し、md5 チェック後に /usr/local/bin へ配置する
+echo 'ffmpeg / ffprobe をインストール...'
+case "$(uname -m)" in
+    x86_64)  FFMPEG_ARCH=amd64 ;;
+    aarch64) FFMPEG_ARCH=arm64 ;;
+    *)       FFMPEG_ARCH= ; echo "未対応のアーキテクチャ: $(uname -m)" ;;
+esac
+FFMPEG_TMP=$(mktemp -d)
+cd $FFMPEG_TMP
+if [ -n "$FFMPEG_ARCH" ] \
+   && curl -fsSLO https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-$FFMPEG_ARCH-static.tar.xz \
+   && curl -fsSLO https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-$FFMPEG_ARCH-static.tar.xz.md5 \
+   && md5sum -c ffmpeg-release-$FFMPEG_ARCH-static.tar.xz.md5; then
+    tar xf ffmpeg-release-$FFMPEG_ARCH-static.tar.xz
+    sudo install -m 0755 ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/
+else
+    # ダウンロードに失敗した場合は、このリポジトリに置いてある x86_64 版を使う
+    echo '静的ビルドの取得に失敗したため、リポジトリ同梱版 (x86_64) をインストールします'
+    curl -fsSL -o ffmpeg https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffmpeg
+    curl -fsSL -o ffprobe https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/bin/al2023/ffmpeg/ffprobe
+    sudo install -m 0755 ffmpeg ffprobe /usr/local/bin/
+fi
+cd ~
+rm -rf $FFMPEG_TMP
+# 動作確認 (apache からも使えるか)
+/usr/local/bin/ffmpeg -version | head -1
+/usr/local/bin/ffprobe -version | head -1
+sudo -u apache /usr/local/bin/ffmpeg -version | head -1
 
 echo 'laravelコンテンツ用ディレクトリ作成...'
 sudo mkdir /var/www/dev
@@ -218,6 +254,8 @@ sudo sed -i "s/serverurl=unix:\/\/\/tmp\/supervisor.sock/; serverurl=unix:\/\/\/
 sudo sed -i "s/;serverurl=http:\/\/127.0.0.1:9001/serverurl=http:\/\/127.0.0.1:9001/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/;files = relative\/directory\/\*.ini/files = \/etc\/supervisord\/conf.d\/\*.conf/" /etc/supervisord/supervisord.conf
+# queue worker が作るファイルもグループ書込み可にする
+sudo sed -i "s/^;umask=022/umask=002/" /etc/supervisord/supervisord.conf
 diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
 curl -o supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt 
 sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
@@ -243,6 +281,8 @@ curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/maste
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.py
 curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/freshclam.conf
+# Laravel の storage を apache / ec2-user 共有にする (usage: laravel_shared_perms.sh /var/www/dev/xxx)
+curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/laravel_shared_perms.sh
 
 chmod +x *.sh
 chmod +x *.py
