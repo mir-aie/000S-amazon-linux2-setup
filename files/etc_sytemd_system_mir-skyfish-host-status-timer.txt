@@ -1,17 +1,18 @@
 #
-# Skyfish ホスト状態送信サービス（mir-skyfish-host-status.service）を毎分起動するタイマー
+# Skyfish ホスト状態送信サービス（mir-skyfish-host-status.service）を10分毎に起動するタイマー
 #
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
 #
 # /etc/systemd/system/mir-skyfish-host-status.timer
 
 [Unit]
-Description="Run Skyfish host status every minutes"
+Description="Run Skyfish host status every 10 minutes"
 
 [Timer]
-# 毎日（土日を含む）毎分 01 秒に実行する
+# 毎日（土日を含む）10分毎（00,10,20,30,40,50分）の 01 秒に実行する
 # 書式は 曜日 年-月-日 時:分:秒（曜日を省略すると毎日）
-OnCalendar=*-*-* *:*:01
+# 分の "00/10" は「00分から10分間隔」の意味
+OnCalendar=*-*-* *:00/10:01
 
 # 起動するサービス
 Unit=mir-skyfish-host-status.service

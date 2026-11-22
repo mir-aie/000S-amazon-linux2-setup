@@ -340,5 +340,115 @@ sudo systemctl is-enabled amazon-cloudwatch-agent.service
 sudo systemctl status amazon-cloudwatch-agent.service
 
 
+Webサーバーを動かすユーザーはapacheに統一する
+============================================
+結論：Webは今のまま apache ユーザーで動かし、artisan も apache ユーザーで実行する運用をおすすめします。 実行ユーザーを1つに揃えれば、パーミッションの衝突はなくなります。
+
+ec2-user で動かすのをおすすめしない理由
+ec2-user はパスワードなしで sudo が使えます。php-fpm を ec2-user で動かすと、Webアプリに脆弱性があった場合、攻撃者がそのまま root 権限まで取れてしまいます。Webプロセスは sudo 権限のないユーザー（apache）で動かすのが安全です。
+
+対策1：実行ユーザーを apache に揃える（根本対策）
+
+# 手動実行
+sudo -u apache php artisan xxx
+
+# ec2-user の ~/.bashrc にエイリアスを入れておくと楽です
+alias art='sudo -u apache php /var/www/xxx/artisan'
+次のものも apache で動かします。
+
+スケジューラ：sudo crontab -u apache -e に * * * * * php /path/artisan schedule:run
+キューワーカー：supervisor や systemd の設定で user=apache
+デプロイ後の config:cache や view:cache なども sudo -u apache で実行する
+対策2：うっかり ec2-user で実行しても壊れないようにする（保険）
+グループ書き込みを許可しておくと、どちらのユーザーで作ったファイルも両方から書けるようになります。
+
+
+sudo usermod -aG apache ec2-user
+sudo chown -R apache:apache storage bootstrap/cache
+sudo chmod -R ug+rwX storage bootstrap/cache
+sudo find storage bootstrap/cache -type d -exec chmod g+s {} \;   # 新しいディレクトリにもグループ apache を引き継がせる
+さらに、新しく作られるファイルがグループで書き込めるように umask を 002 にします。
+
+php-fpm：sudo systemctl edit php-fpm で [Service] の下に UMask=0002
+ec2-user：~/.bashrc に umask 002
+このプロジェクトで気になった点
+config/logging.php:145 で audit ログが 'permission' => 0644 になっています。このため、日付が変わって最初に書き込んだユーザーしかそのファイルに書けません。対策2を取る場合は 0664 に変更してください。他のチャンネルも含めて揃えておくと安心です。
+
+まずは対策1（sudo -u apache に統一）だけでも、ご相談の問題はほぼ解消するはずです。
+============================================
+
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+SMTPサーバと一括配信システムとの連携
+※現状平塚市が prd-mms-01a/b-p82al2 に建てたSMTPでJ-ALERTと連携している。
+
+
+1. 受信ドメインの確認
+transport_maps のキーは「ローカル部@ドメイン」の完全一致です。ドメイン名を正確に確認します。
+
+postconf myhostname mydomain default_privs
+smtp.a-alert.net が $myhostname か $mydomain のどちらかに一致していることを確認してください。
+
+2. /etc/postfix/master.cf に追記
+
+sudo cp -p /etc/postfix/master.cf /etc/postfix/master.cf.bak.20261111
+sudo vi /etc/postfix/master.cf
+末尾に追記します。継続行は空白で始めてください。
+
+
+jalert500001 unix  -       n       n       -       -       pipe
+  flags=Rq user=ec2-user argv=/usr/bin/php /var/www/production/300L-demo01-500001-alert-v3/live/artisan jalert_smtp_receiver
+jalert142034 unix  -       n       n       -       -       pipe
+  flags=Rq user=ec2-user argv=/usr/bin/php /var/www/production/300L-hiratsuka-142034-alert-v3/live/artisan jalert_smtp_receiver
+
+
+3. /etc/postfix/transport を作成
+
+sudo vi /etc/postfix/transport
+
+jalert-demo01-500001@smtp.a-alert.net      jalert500001:
+jalert-hiratsuka-142034@smtp.a-alert.net   jalert142034:
+t1@smtp.a-alert.net                        jalert500001:
+
+sudo postmap /etc/postfix/transport
+sudo postconf -e 'transport_maps = hash:/etc/postfix/transport'
+
+4. /etc/aliases はそのまま残す
+
+local_recipient_maps = proxy:unix:passwd.byname $alias_maps なので、alias の行を消すと宛先不明として受信拒否されます。transport_maps が優先されるため、alias の行が残っていても実行されなくなります。
+
+行を残しつつ、万一の apache 実行を防ぎたい場合は、宛先を ec2-user に書き換えて sudo newaliases を実行します。
+
+
+jalert-demo01-500001: ec2-user
+jalert-hiratsuka-142034: ec2-user
+
+5. 反映と確認
+
+sudo postfix check
+sudo systemctl reload postfix
+postmap -q jalert-hiratsuka-142034@smtp.a-alert.net hash:/etc/postfix/transport   # → jalert142034:
+postmap -q jalert-demo01-500001@smtp.a-alert.net hash:/etc/postfix/transport   # → jalert500001:
+
+6. storage の所有者を ec2-user に揃える
+
+for d in /var/www/production/300L-demo01-500001-alert-v3/live /var/www/production/300L-demo01-500001-alert-v3/test /var/www/dev/300L-hiratsuka-142034-alert-v3/live /var/www/dev/300L-hiratsuka-142034-alert-v3/test; do
+  sudo find $d/storage $d/bootstrap/cache ! -user ec2-user -ls | head
+done
+# apache 所有のものがあれば
+sudo chown -R ec2-user:ec2-user <該当ディレクトリ>/storage <該当ディレクトリ>/bootstrap/cache
+httpd(apache)も同じ storage に書き込む構成なら、chown すると Web 側が書けなくなります。その場合は教えてください。
+
+7. テスト
+
+echo -e "Subject: TEST\n\nTEST" | sendmail -f test@example.com jalert-demo01-500001@smtp.a-alert.net
+sudo tail -f /var/log/maillog
+maillog に relay=jalert500001, ... status=sent (delivered via jalert500001 service) が出れば成功です。
+Laravel のログに [JALERT] run as uid=1000 user=ec2-user が出ることも確認してください。確認できたら、デバッグ用のログ行は削除してください。
+
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+
 # 再起動しないと色々おかしい
 sudo reboot now
