@@ -62,9 +62,9 @@ max_input_vars 5000
 max_file_uploads 50
 date.timezone Asia/Tokyo
 EOF
-chk "php-fpm user = ec2-user"   "grep -q '^user = ec2-user' /etc/php-fpm.d/www.conf"
-chk "php-fpm group = ec2-user"  "grep -q '^group = ec2-user' /etc/php-fpm.d/www.conf"
-chk "php-fpm ワーカーが ec2-user で動いている" "ps -o user= -C php-fpm | grep -q ec2-user"
+chk "php-fpm user = apache"   "grep -q '^user = apache' /etc/php-fpm.d/www.conf"
+chk "php-fpm group = apache"  "grep -q '^group = apache' /etc/php-fpm.d/www.conf"
+chk "php-fpm ワーカーが apache で動いている" "ps -o user= -C php-fpm | grep -q apache"
 pecl list 2>/dev/null
 
 sec Redis / MariaDB

@@ -16,6 +16,7 @@ from urllib.error import URLError, HTTPError
 import datetime
 
 AWS_INSTANCE_ID_GET_URL = 'http://169.254.169.254/latest/meta-data/instance-id/'
+LARAVEL_PERMS_SCRIPT = '/home/ec2-user/bin/laravel_shared_perms.sh'
 FINISHED_REQUEST_FILE = '/home/ec2-user/deploy/remote_deploy_finished_request_id.txt'
 LOG_FILE = '/home/ec2-user/deploy/remote_deploy_log.txt'
 API_HASH_SEED = 'm1ra1eAp1Dep10y'
@@ -114,14 +115,7 @@ def exec_update_test(app_code):
     cmd = "/usr/bin/php artisan migrate --isolated --force"
     run_cmd(cmd.split())
 
-    cmd = "touch storage/logs/laravel.log"
-    run_cmd(cmd.split())
-
-    cmd = "sudo /bin/chmod -R a+w storage"
-    run_cmd(cmd.split())
-
-    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
-    run_cmd(cmd.split())
+    set_laravel_perms()
 
     cmd = "sudo killall -USR2 php-fpm"
     run_cmd(cmd.split())
@@ -155,14 +149,7 @@ def exec_update_env(app_code):
     cmd = "/usr/bin/php artisan migrate --isolated --force"
     run_cmd(cmd.split())
 
-    cmd = "touch storage/logs/laravel.log"
-    run_cmd(cmd.split())
-
-    cmd = "sudo /bin/chmod -R a+w storage"
-    run_cmd(cmd.split())
-
-    cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
-    run_cmd(cmd.split())
+    set_laravel_perms()
 
     response['message'] = '.env update OK'
 
@@ -302,6 +289,21 @@ def get_git_rev(app_code, stage):
     #print (f"git_detail")
     #print (response[stage + "_last_commit_at"])
     #print (response[stage + "_last_commit_msg"])
+
+def set_laravel_perms():
+    # storage / bootstrap/cache を apache と ec2-user の両方で読み書きできるようにする
+    # (カレントディレクトリの Laravel が対象)
+    if os.access(LARAVEL_PERMS_SCRIPT, os.X_OK):
+        run_cmd([LARAVEL_PERMS_SCRIPT, '.'])
+    else:
+        cmd = "touch storage/logs/laravel.log"
+        run_cmd(cmd.split())
+
+        cmd = "sudo /bin/chmod -R a+w storage"
+        run_cmd(cmd.split())
+
+        cmd = "sudo /bin/chmod -R a+w bootstrap/cache"
+        run_cmd(cmd.split())
 
 def run_cmd(cmd):
     global has_error, error_messages
