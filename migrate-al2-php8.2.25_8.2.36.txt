@@ -1,0 +1,9 @@
+# Amazon linux 2: php8.2.35 
+
+rpm -qa 'php*' | sort > ~/php-before.txt
+sudo yum update -y --advisory=ALAS2PHP8.2-2026-016
+php -v        # 8.2.36 になっているか
+php -m        # 拡張モジュールが欠けていないか
+rpm -qa 'php*' | sort | diff ~/php-before.txt -   # 更新漏れがないか
+sudo systemctl restart php-fpm
+sudo systemctl restart httpd     # nginx の場合は nginx
