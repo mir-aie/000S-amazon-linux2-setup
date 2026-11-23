@@ -6,8 +6,8 @@
 [Unit]
 Description="BASENAME"
 # ネットワークが使える状態になってから実行する
-After=network.target
-Requires=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 # 実行時のカレントディレクトリ

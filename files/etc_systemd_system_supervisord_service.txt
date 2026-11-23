@@ -4,12 +4,12 @@ Documentation=http://supervisord.org
 After=network.target
 
 [Service]
-Type=forking
-ExecStart=/usr/local/bin/supervisord -c /etc/supervisord/supervisord.conf
-ExecReload=/usr/local/bin/supervisorctl reload
-ExecStop=/usr/local/bin/supervisorctl shutdown
+# -n でフォアグラウンド起動し、systemd が直接プロセスを管理する（停止も systemd が SIGTERM で行う）
+Type=simple
+ExecStart=/usr/local/bin/supervisord -n -c /etc/supervisord/supervisord.conf
+ExecReload=/usr/local/bin/supervisorctl -c /etc/supervisord/supervisord.conf reload
+Restart=on-failure
 User=root
 
 [Install]
 WantedBy=multi-user.target
-

@@ -7,8 +7,8 @@
 [Unit]
 Description="Skyfish remote update"
 # ネットワークが使える状態になってから実行する
-After=network.target
-Requires=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 # 実行時のカレントディレクトリ
@@ -20,6 +20,8 @@ User=ec2-user
 Group=ec2-user
 # 1回実行して終了する
 Type=oneshot
+# composer 等が固まったときに備えて、30分で打ち切る
+TimeoutStartSec=30min
 
 #  cd /etc/systemd/system/
 #  sudo vi mir-skyfish-remote-update.service

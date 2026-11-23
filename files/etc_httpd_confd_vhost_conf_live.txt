@@ -7,7 +7,7 @@
   ErrorLog logs/BASENAME-live.error.log
 
   <Directory "/var/www/production/BASENAME/live/public">
-    Options Indexes FollowSymlinks
+    Options -Indexes +FollowSymLinks
     AllowOverride All
     Require all granted
   </Directory>

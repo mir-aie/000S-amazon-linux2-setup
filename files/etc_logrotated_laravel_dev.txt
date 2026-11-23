@@ -3,7 +3,9 @@
     daily
     dateext
     rotate 30
+    compress
     delaycompress
+    notifempty
     su apache apache
     copytruncate
 }

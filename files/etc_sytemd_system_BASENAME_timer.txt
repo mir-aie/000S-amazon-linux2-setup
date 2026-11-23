@@ -6,7 +6,7 @@
 # /etc/systemd/system/BASENAME.timer
 
 [Unit]
-Description="Run BASENAME every minutes"
+Description="Run BASENAME"
 
 [Timer]
 # 毎日（土日を含む）毎分 01 秒に実行する

@@ -7,7 +7,7 @@
   ErrorLog logs/check-BASENAME.error.log
 
   <Directory "/var/www/dev/BASENAME/public">
-    Options Indexes FollowSymlinks
+    Options -Indexes +FollowSymLinks
     AllowOverride All
     Require all granted
   </Directory>

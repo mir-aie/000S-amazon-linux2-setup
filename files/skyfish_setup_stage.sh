@@ -91,7 +91,7 @@ sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf
 echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf"
 
 # supervisord / queue worker
-curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf_check.txt
+curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_supervisord_confd_conf_check.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"

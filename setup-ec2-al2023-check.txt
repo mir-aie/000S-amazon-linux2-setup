@@ -109,7 +109,7 @@ chk "/etc/supervisord.conf リンク" "[ \"\$(readlink /etc/supervisord.conf)\" 
 sudo /usr/local/bin/supervisorctl -c $c status
 
 sec ~/bin スクリプト
-for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py skyfish_setup_vhost.sh \
+for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py \
          skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh clamscan.sh skyfish_setup_stage.sh freshclam.conf; do
   chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
 done

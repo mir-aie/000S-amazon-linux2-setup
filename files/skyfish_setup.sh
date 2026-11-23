@@ -189,7 +189,7 @@ echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 DOMAIN_TEST="test-$DOMAIN"
 
 # supervisord / queue worker
-curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf.txt
+curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_supervisord_confd_conf.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"

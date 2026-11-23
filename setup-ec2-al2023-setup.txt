@@ -315,7 +315,6 @@ curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/mast
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
-curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_vhost.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
@@ -462,7 +461,6 @@ SMTPサーバと一括配信システムとの連携
 sudo dnf install -y postfix
 sudo cp -p /etc/postfix/main.cf /etc/postfix/main.cf.bak.$(date +%Y%m%d)
 # 外部 (J-ALERT) からの SMTP を受けるため、全インターフェースで待ち受け、受信ドメインを設定する
-# （参考: files/etc_postfix_main_cf.txt）
 sudo postconf -e 'myhostname = smtp.a-alert.net'
 sudo postconf -e 'mydomain = a-alert.net'
 sudo postconf -e 'inet_interfaces = all'

@@ -7,7 +7,7 @@
   ErrorLog logs/BASENAME-test.error.log
 
   <Directory "/var/www/production/BASENAME/test/public">
-    Options Indexes FollowSymlinks
+    Options -Indexes +FollowSymLinks
     AllowOverride All
     Require all granted
   </Directory>
