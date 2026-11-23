@@ -110,7 +110,7 @@ sudo /usr/local/bin/supervisorctl -c $c status
 
 sec ~/bin スクリプト
 for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py \
-         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh clamscan.sh skyfish_setup_stage.sh freshclam.conf; do
+         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh skyfish_setup_stage.sh; do
   chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
 done
 chk "*.sh / *.py に実行権" "[ -z \"\$(find ~/bin \( -name '*.sh' -o -name '*.py' \) ! -perm -u+x)\" ]"

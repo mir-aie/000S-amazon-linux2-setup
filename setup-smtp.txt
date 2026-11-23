@@ -147,20 +147,3 @@ Subject: 01-01【国民保護情報】ゲリラ・特殊部隊攻撃情報＞攻
 
 
 '
-=======================================
-https://blog.katsubemakito.net/aws/clam-antivirus-on-amazonlinux2
-
-clamd
-
-sudo amazon-linux-extras install epel
-
-sudo yum install clamav clamav-update clamd
-sudo freshclam
-sudo cp /etc/clamd.d/scan.conf /etc/clamd.d/scan.conf.back
-
-
-clamscan -i -r ~ > /dev/null 2>&1
-
-sudo crontab -e
-30 05 * * * /home/ec2-user/bin/clamscan.sh
-
