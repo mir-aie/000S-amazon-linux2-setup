@@ -22,7 +22,7 @@ for s in httpd php-fpm redis6 mariadb supervisord crond; do
 done
 
 sec タイマー
-for t in dnf-automatic.timer dnf-automatic-install.timer mir-skyfish-host-status.timer mir-skyfish-remote-update.timer; do
+for t in dnf-automatic.timer mir-skyfish-host-status.timer mir-skyfish-remote-update.timer; do
   a=$(systemctl is-active $t 2>&1); e=$(systemctl is-enabled $t 2>&1)
   [ "$a" = active ] && ok "$t ($a/$e)" || ng "$t ($a/$e)  ※remote-update は本番のみ"
 done
@@ -31,6 +31,8 @@ systemctl list-timers --all --no-pager | grep -E 'dnf-automatic|skyfish'
 sec dnf-automatic
 chk "upgrade_type = security" "grep -Eq '^upgrade_type *= *security' /etc/dnf/automatic.conf"
 chk "apply_updates = yes"     "grep -Eq '^apply_updates *= *yes' /etc/dnf/automatic.conf"
+chk "releasever = latest"     "grep -qx latest /etc/dnf/vars/releasever"
+chk "install.timer は無効"    "! systemctl is-enabled -q dnf-automatic-install.timer"
 
 sec httpd
 for f in /var/www/html/index.html /etc/httpd/conf.d/{security,security_strict,vhost-000,keepalive}.conf; do
@@ -82,14 +84,13 @@ sec ツール
 source ~/.nvm/nvm.sh 2>/dev/null
 for c in "git --version" "composer --version" "node -v" "npm -v" "sox --version" \
          "/usr/local/bin/ffmpeg -version" "/usr/local/bin/ffprobe -version" \
-         "/usr/local/bin/supervisorctl version" "convert -version"; do
+         "sudo /usr/local/bin/supervisorctl version" "convert -version"; do
   out=$($c 2>/dev/null | head -1); [ -n "$out" ] && ok "$out" || ng "$c"
 done
 chk "python: boto3"  "python3 -c 'import boto3'"
-chk "python: boto"   "python3 -c 'import boto'"
 
 sec ディレクトリ / logrotate
-chk "/var/www/dev 書込可"  "[ -d /var/www/dev ] && [ \"\$(stat -c %a /var/www/dev)\" = 777 ]"
+chk "/var/www/dev ec2-user:apache 2775"  "[ \"\$(stat -c '%U:%G %a' /var/www/dev)\" = 'ec2-user:apache 2775' ]"
 for f in /etc/logrotate.d/laravel.conf /etc/logrotate.d/laravel_dev.conf; do
   chk "$f root:root 644" "[ \"\$(stat -c '%U:%G %a' $f)\" = 'root:root 644' ]"
   chk "$f 構文OK"        "sudo logrotate -d $f 2>&1 | grep -qv 'error'"
@@ -97,16 +98,19 @@ done
 
 sec supervisord
 c=/etc/supervisord/supervisord.conf
-chk "[inet_http_server] 有効" "grep -q '^\[inet_http_server\]' $c"
-chk "port=127.0.0.1:9001"     "grep -q '^port=127.0.0.1:9001' $c"
-chk "logfile=/var/log"        "grep -q 'logfile=/var/log/supervisord.log' $c"
-chk "[include] conf.d"        "grep -q '^files = /etc/supervisord/conf.d/\*.conf' $c"
+chk "[inet_http_server] 有効" "sudo grep -q '^\[inet_http_server\]' $c"
+chk "port=127.0.0.1:9001"     "sudo grep -q '^port=127.0.0.1:9001' $c"
+chk "logfile=/var/log"        "sudo grep -q 'logfile=/var/log/supervisord.log' $c"
+chk "[include] conf.d"        "sudo grep -q '^files = /etc/supervisord/conf.d/\*.conf' $c"
 chk "9001 応答あり"            "curl -s -o /dev/null http://127.0.0.1:9001/"
+chk "9001 認証あり (401)"      "[ \"\$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9001/)\" = 401 ]"
+chk "conf は root のみ (600)"  "[ \"\$(sudo stat -c %a $c)\" = 600 ]"
+chk "/etc/supervisord.conf リンク" "[ \"\$(readlink /etc/supervisord.conf)\" = $c ]"
 sudo /usr/local/bin/supervisorctl -c $c status
 
 sec ~/bin スクリプト
 for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py skyfish_setup_vhost.sh \
-         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh clamscan.sh skyfish_setup_stage.py freshclam.conf; do
+         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh clamscan.sh skyfish_setup_stage.sh freshclam.conf; do
   chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
 done
 chk "*.sh / *.py に実行権" "[ -z \"\$(find ~/bin \( -name '*.sh' -o -name '*.py' \) ! -perm -u+x)\" ]"

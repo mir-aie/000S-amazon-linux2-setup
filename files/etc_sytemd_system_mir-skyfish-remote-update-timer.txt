@@ -1,12 +1,12 @@
 #
-# Skyfish 本番プログラム更新スクリプト（mir-skyfish-remote-update.service）を毎分起動するタイマー
+# Skyfish 本番プログラム更新スクリプト（mir-skyfish-remote-update.service）を10分毎に起動するタイマー
 #
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
 #
 # /etc/systemd/system/mir-skyfish-remote-update.timer
 
 [Unit]
-Description="Run Skyfish host status every minutes"
+Description="Run Skyfish remote update every 10 minutes"
 
 [Timer]
 # 毎日（土日を含む）10分毎（00,10,20,30,40,50分）の 01 秒に実行する

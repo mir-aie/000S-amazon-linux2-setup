@@ -1,7 +1,15 @@
 # Show HOSTNAME to PROMPT
 echo 'シェルプロンプトにホスト名を表示...'
 sudo vi /etc/profile.d/prompt.sh
+
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP
+**** 以下を vi 等で /etc/profile.d/prompt.sh に記入（%SERVER_NAME_HERE% はサーバ名に置き換える）
+
 export NICKNAME=%SERVER_NAME_HERE%
+
+**** /記入してください
+**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP
+
 sudo sed -i "s/\\\u@\\\h /\\\u@\$NICKNAME /" /etc/bashrc
 
 cd ~
@@ -9,7 +17,19 @@ mkdir -p bin
 cd bin
 
 echo 'システムファイル更新...'
-sudo dnf upgrade --releasever=latest
+sudo dnf upgrade -y --releasever=latest
+
+# AL2023 はリリースバージョンが固定されるため、--releasever=latest はそのコマンド1回にしか効かない。
+# releasever を latest に固定して、以降の dnf（下のパッケージ確認・インストール・dnf-automatic）が
+# 常に最新リリースを見るようにする。
+echo latest | sudo tee /etc/dnf/vars/releasever
+
+# パッケージが存在するかを確認する
+for p in php8.4-pecl-apcu php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack \
+         php-pear ImageMagick ImageMagick-devel sox redis6 python3-boto3 \
+         amazon-cloudwatch-agent postfix mariadb1011-server cronie acl; do
+  dnf list -q "$p" >/dev/null 2>&1 && echo "OK  $p" || echo "NG  $p"
+done
 
 echo 'タイムゾーン更新...'
 sudo timedatectl set-timezone Asia/Tokyo
@@ -22,13 +42,13 @@ echo 'httpdをインストール...'
 sudo dnf install -y httpd
 
 echo 'httpdの設定ファイルをインストール...'
-curl -o index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/var_www_html_index.html
+curl -fo index.html https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/var_www_html_index.html
 sudo mv index.html /var/www/html/
-curl -o security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
+curl -fo security.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_conf.txt
 sudo mv security.conf /etc/httpd/conf.d/
-curl -o security_strict.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_strict_conf.txt
+curl -fo security_strict.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_security_strict_conf.txt
 sudo mv security_strict.conf /etc/httpd/conf.d/
-curl -o vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_000.txt
+curl -fo vhost-000.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_000.txt
 sudo mv vhost-000.conf /etc/httpd/conf.d/
 
 # Apache のログに X-Forwarded-For もつける
@@ -68,26 +88,32 @@ apply_updates = yes
 **** /編集してください
 **** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
 
-sudo systemctl start dnf-automatic-install.timer
+# releasever は冒頭で latest に設定済みなので、dnf-automatic も最新リリースのセキュリティ更新を適用する
+
+# automatic.conf の apply_updates = yes で適用まで行うので、タイマーは dnf-automatic.timer だけでよい
+# （dnf-automatic-install.timer と両方動かすと二重に実行される）
 sudo systemctl enable --now dnf-automatic.timer
-sudo systemctl status dnf-automatic-install.timer
+systemctl list-timers dnf-automatic.timer
 
 # redis
 sudo dnf -y install redis6
 
 # PHPのインストール
-echo 'php8.2をインストール...'
+echo 'php8.4をインストール...'
 
-dnf list --available php*
+dnf list --available 'php*'
 
-#sudo dnf install -y php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel.x86_64 php8.4-gd.x86_64 php8.4-mbstring.x86_64 php8.4-opcache.x86_64 php8.4-xml.x86_64 php8.4-pdo.x86_64 php8.4-pecl-apcu.x86_64 php8.4-fpm.x86_64 php8.4-mysqlnd.x86_64 php8.4-intl.x86_64 php8.4-pecl-igbinary.x86_64 php8.4-pecl-redis6.x86_64 php8.4-pecl-msgpack.x86_64 php8.4-process.x86_64 php8.4-zip.x86_64 php8.4-soap.x86_64 php8.4-gmp.x86_64 
+# アーキテクチャ (.x86_64) は指定しない（Graviton / aarch64 でも同じ行で入るように）
+# ドライラン
+sudo dnf install --assumeno php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel php8.4-gd php8.4-mbstring php8.4-opcache php8.4-xml php8.4-pdo php8.4-pecl-apcu php8.4-fpm php8.4-mysqlnd php8.4-intl php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack php8.4-process php8.4-zip php8.4-soap php8.4-gmp
 
-sudo dnf install -y php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-devel.x86_64 php8.2-gd.x86_64 php8.2-mbstring.x86_64 php8.2-opcache.x86_64 php8.2-xml.x86_64 php8.2-pdo.x86_64 php8.2-pecl-apcu.x86_64 php8.2-fpm.x86_64 php8.2-mysqlnd.x86_64 php8.2-intl.x86_64 php8.2-pecl-igbinary.x86_64 php8.2-pecl-redis6.x86_64 php8.2-pecl-msgpack.x86_64 php8.2-process.x86_64 php8.2-zip.x86_64 php8.2-soap.x86_64 php8.2-gmp.x86_64 
+# 実行
+sudo dnf install -y php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel php8.4-gd php8.4-mbstring php8.4-opcache php8.4-xml php8.4-pdo php8.4-pecl-apcu php8.4-fpm php8.4-mysqlnd php8.4-intl php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack php8.4-process php8.4-zip php8.4-soap php8.4-gmp
 
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sudo sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php.ini
+sudo sed -i "s/post_max_size = 8M/post_max_size = 64M/" /etc/php.ini
 sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
 sudo sed -i "s/; max_input_vars = 1000/max_input_vars = 5000/" /etc/php.ini
 sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
@@ -97,22 +123,20 @@ diff /etc/php.ini.default /etc/php.ini
 # PEAR
 sudo dnf install -y php-pear
 
+# imagick が PHP 8.4 でビルドできるか
+# セットアップの後に次を実行して、Warning が出ず、imagick とバージョンが表示されれば OK です。
+php -v 2>&1 | head -3
+php -m | grep -i imagick
+php -r 'echo Imagick::getVersion()["versionString"], PHP_EOL;'
+
 # IMagick
 sudo dnf install -y ImageMagick ImageMagick-devel
 sudo pecl install imagick
 echo "extension=imagick.so" | sudo tee /etc/php.d/50-imagick.ini
 
 # PHPREDIS
-sudo pecl install redis
-**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
-**** プロンプトが出たらエンター
-
-**** 基本エンター。igbinaryはnoにする
-
-**** /プロンプトが出たらエンター
-**** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
-
-echo "extension=redis.so" | sudo tee /etc/php.d/50-redis.ini
+# redis 拡張は dnf の php8.4-pecl-redis6 で入るので、pecl install redis と 50-redis.ini の作成はしない
+# （両方入れると "Module 'redis' is already loaded" の警告が出る）
 
 # php-fpf の起動
 
@@ -136,6 +160,11 @@ sudo dnf install -y acl
 
 sudo systemctl start php-fpm
 sudo systemctl enable php-fpm
+
+# PHP 拡張が二重に読み込まれていないか確認
+php -v 2>&1 | grep -i warning   # "Module 'redis' is already loaded" 等が出たら二重読込み
+php -m | grep -i -e redis -e imagick -e igbinary
+ls /etc/php.d/ | grep -i -e redis -e imagick
 
 # Redisの起動
 sudo systemctl start redis6
@@ -215,22 +244,26 @@ rm -rf $FFMPEG_TMP
 sudo -u apache /usr/local/bin/ffmpeg -version | head -1
 
 echo 'laravelコンテンツ用ディレクトリ作成...'
-sudo mkdir /var/www/dev
-sudo chmod a+w /var/www/dev
-#sudo mkdir /var/www/production
-#sudo chmod a+w /var/www/production
+# 誰でも書ける (a+w) にはせず、ec2-user と apache グループだけが書けるようにする
+# 2775 の 2 (setgid) で、配下に作ったディレクトリも apache グループを引き継ぐ
+sudo mkdir -p /var/www/dev
+sudo chown ec2-user:apache /var/www/dev
+sudo chmod 2775 /var/www/dev
+#sudo mkdir -p /var/www/production
+#sudo chown ec2-user:apache /var/www/production
+#sudo chmod 2775 /var/www/production
 
 # laravel logローテート設定...
 # 本番環境用
 echo 'laravel logローテート設定...'
-curl -o laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
+curl -fo laravel https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel.txt
 sudo mv laravel /etc/logrotate.d/laravel.conf
 sudo chown root /etc/logrotate.d/laravel.conf
 sudo chgrp root /etc/logrotate.d/laravel.conf
 sudo chmod 0644 /etc/logrotate.d/laravel.conf
 
 # 開発環境用
-curl -o laravel_dev https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel_dev.txt
+curl -fo laravel_dev https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_logrotated_laravel_dev.txt
 sudo mv laravel_dev /etc/logrotate.d/laravel_dev.conf
 sudo chown root /etc/logrotate.d/laravel_dev.conf
 sudo chgrp root /etc/logrotate.d/laravel_dev.conf
@@ -248,6 +281,16 @@ sudo mkdir /etc/supervisord/conf.d
 sudo cp /etc/supervisord/supervisord.conf /etc/supervisord/supervisord.conf.original
 sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/;port=127.0.0.1:9001/port=127.0.0.1:9001/" /etc/supervisord/supervisord.conf
+# 管理画面 (127.0.0.1:9001) に認証をかける。認証なしだと apache 等サーバ上の誰でもキューを止め・起動できる
+# [inet_http_server] と [supervisorctl] の両方に同じ ID / パスワードを設定する
+SUPERVISOR_PASS=$(openssl rand -hex 16)
+sudo sed -i -e "s/^;username=user .*/username=supervisor/" -e "s/^;username=chris .*/username=supervisor/" /etc/supervisord/supervisord.conf
+sudo sed -i "s/^;password=123 .*/password=$SUPERVISOR_PASS/" /etc/supervisord/supervisord.conf
+unset SUPERVISOR_PASS
+# パスワードが書かれているので root だけが読めるようにする（supervisorctl は sudo で実行する）
+sudo chmod 600 /etc/supervisord/supervisord.conf
+# sudo supervisorctl が -c なしでもこの設定（＝パスワード）を読めるよう、既定の場所にリンクを置く
+sudo ln -sf /etc/supervisord/supervisord.conf /etc/supervisord.conf
 sudo sed -i "s/logfile=\/tmp\/supervisord.log/logfile=\/var\/log\/supervisord.log/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/\/tmp\/supervisord.pid/\/var\/run\/supervisord.pid/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/serverurl=unix:\/\/\/tmp\/supervisor.sock/; serverurl=unix:\/\/\/tmp\/supervisor.sock/" /etc/supervisord/supervisord.conf
@@ -256,9 +299,8 @@ sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
 sudo sed -i "s/;files = relative\/directory\/\*.ini/files = \/etc\/supervisord\/conf.d\/\*.conf/" /etc/supervisord/supervisord.conf
 # queue worker が作るファイルもグループ書込み可にする
 sudo sed -i "s/^;umask=022/umask=002/" /etc/supervisord/supervisord.conf
-diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
-curl -o supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt 
-sudo sed -i "s/;\[include\]/\[include\]/" /etc/supervisord/supervisord.conf
+sudo diff /etc/supervisord/supervisord.conf.original /etc/supervisord/supervisord.conf
+curl -fo supervisord.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_systemd_system_supervisord_service.txt
 
 sudo mv supervisord.service /etc/systemd/system/
 sudo systemctl start supervisord
@@ -269,35 +311,26 @@ sudo systemctl is-enabled supervisord
 cd ~
 mkdir -p bin
 cd bin
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_vhost.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.py
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/freshclam.conf
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_vhost.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/clamscan.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/freshclam.conf
 # Laravel の storage を apache / ec2-user 共有にする (usage: laravel_shared_perms.sh /var/www/dev/xxx)
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/laravel_shared_perms.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/laravel_shared_perms.sh
 
 chmod +x *.sh
 chmod +x *.py
 
-# skyfish
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_service.txt
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_timer.txt
-
-sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
-sudo sed -i "s/;\[inet_http_server\]/\[inet_http_server\]/" /etc/supervisord/supervisord.conf
-
-
 # 全環境
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-service.txt
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-timer.txt
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-service.txt
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-host-status-timer.txt
 
 sudo mv etc_sytemd_system_mir-skyfish-host-status-service.txt /etc/systemd/system/mir-skyfish-host-status.service
 sudo mv etc_sytemd_system_mir-skyfish-host-status-timer.txt /etc/systemd/system/mir-skyfish-host-status.timer
@@ -310,15 +343,13 @@ sudo systemctl restart mir-skyfish-host-status.timer
 systemctl list-timers mir-skyfish-host-status.timer       # 次回の実行予定を確認
 journalctl -n 50 -u mir-skyfish-host-status.service       # 実行ログを確認
 
-# 雛形をコピー
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
+# 雛形を ~/bin にコピー（/etc/systemd/system には置かない）
+# 使うときは BASENAME を置換して /etc/systemd/system/<名前>.service / .timer として置く
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
 
-sudo mv etc_sytemd_system_BASENAME_service.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.service
-sudo mv etc_sytemd_system_BASENAME_timer.txt /etc/systemd/system/etc_sytemd_system_BASENAME_service.timer
-
-sudo pip install boto
-sudo pip3 install boto3
+# boto3（boto2 はもう使われていないので入れない）
+sudo dnf install -y python3-boto3
 
 # HTTP graceful restart
 sudo apachectl configtest
@@ -352,8 +383,8 @@ git config --global user.email obata@mir-ai.co.jp
 
 
 #　本番環境のみ（遠隔でプログラムを最新にするスクリプトを定期起動するバッチ）
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-service.txt
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-timer.txt
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-service.txt
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_mir-skyfish-remote-update-timer.txt
 
 sudo mv etc_sytemd_system_mir-skyfish-remote-update-service.txt /etc/systemd/system/mir-skyfish-remote-update.service
 sudo mv etc_sytemd_system_mir-skyfish-remote-update-timer.txt /etc/systemd/system/mir-skyfish-remote-update.timer
@@ -368,7 +399,10 @@ journalctl -n 50 -u mir-skyfish-remote-update.service       # 実行ログを確
 
 
 # Laravelの個人情報閲覧ログをCloudWatchにコピーする
-curl -O https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/opt_aws_amazon-cloudwatch-agent_etc-amazon-cloudwatch-agent.txt
+# 事前に EC2 の IAM ロールに CloudWatchAgentServerPolicy を付けておくこと
+# AL2023 には CloudWatch Agent が入っていないのでインストールする
+sudo dnf install -y amazon-cloudwatch-agent
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/opt_aws_amazon-cloudwatch-agent_etc-amazon-cloudwatch-agent.txt
 sudo mv opt_aws_amazon-cloudwatch-agent_etc-amazon-cloudwatch-agent.txt /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
@@ -423,6 +457,19 @@ SMTPサーバと一括配信システムとの連携
 ※現状平塚市が prd-mms-01a/b-p82al2 に建てたSMTPでJ-ALERTと連携している。
 
 
+0. Postfix のインストール（AL2023 には MTA が入っていない）
+
+sudo dnf install -y postfix
+sudo cp -p /etc/postfix/main.cf /etc/postfix/main.cf.bak.$(date +%Y%m%d)
+# 外部 (J-ALERT) からの SMTP を受けるため、全インターフェースで待ち受け、受信ドメインを設定する
+# （参考: files/etc_postfix_main_cf.txt）
+sudo postconf -e 'myhostname = smtp.a-alert.net'
+sudo postconf -e 'mydomain = a-alert.net'
+sudo postconf -e 'inet_interfaces = all'
+sudo postconf -e 'mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain'
+sudo systemctl enable --now postfix
+# セキュリティグループで送信元を J-ALERT 側に絞って 25/tcp を開けること
+
 1. 受信ドメインの確認
 transport_maps のキーは「ローカル部@ドメイン」の完全一致です。ドメイン名を正確に確認します。
 
@@ -431,7 +478,7 @@ smtp.a-alert.net が $myhostname か $mydomain のどちらかに一致してい
 
 2. /etc/postfix/master.cf に追記
 
-sudo cp -p /etc/postfix/master.cf /etc/postfix/master.cf.bak.20261111
+sudo cp -p /etc/postfix/master.cf /etc/postfix/master.cf.bak.$(date +%Y%m%d)
 sudo vi /etc/postfix/master.cf
 末尾に追記します。継続行は空白で始めてください。
 
@@ -470,14 +517,15 @@ sudo systemctl reload postfix
 postmap -q jalert-hiratsuka-142034@smtp.a-alert.net hash:/etc/postfix/transport   # → jalert142034:
 postmap -q jalert-demo01-500001@smtp.a-alert.net hash:/etc/postfix/transport   # → jalert500001:
 
-6. storage の所有者を ec2-user に揃える
+6. storage を ec2-user / apache の両方で書けるようにする
 
-for d in /var/www/production/300L-demo01-500001-alert-v3/live /var/www/production/300L-demo01-500001-alert-v3/test /var/www/dev/300L-hiratsuka-142034-alert-v3/live /var/www/dev/300L-hiratsuka-142034-alert-v3/test; do
-  sudo find $d/storage $d/bootstrap/cache ! -user ec2-user -ls | head
+pipe は ec2-user で artisan を実行し、Web (php-fpm) は apache で同じ storage に書き込む。
+所有者を ec2-user に chown すると Web 側が書けなくなるので、chown はせず laravel_shared_perms.sh で共有設定にする。
+（master.cf の argv と同じディレクトリを指定すること）
+
+for d in /var/www/production/300L-demo01-500001-alert-v3/live /var/www/production/300L-demo01-500001-alert-v3/test /var/www/production/300L-hiratsuka-142034-alert-v3/live /var/www/production/300L-hiratsuka-142034-alert-v3/test; do
+  ~/bin/laravel_shared_perms.sh $d
 done
-# apache 所有のものがあれば
-sudo chown -R ec2-user:ec2-user <該当ディレクトリ>/storage <該当ディレクトリ>/bootstrap/cache
-httpd(apache)も同じ storage に書き込む構成なら、chown すると Web 側が書けなくなります。その場合は教えてください。
 
 7. テスト
 

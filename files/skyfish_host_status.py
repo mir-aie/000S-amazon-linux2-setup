@@ -21,6 +21,7 @@ import random
 from urllib.error import URLError, HTTPError
 import datetime
 
+AWS_IMDS_TOKEN_URL = 'http://169.254.169.254/latest/api/token'
 AWS_INSTANCE_ID_GET_URL = 'http://169.254.169.254/latest/meta-data/instance-id/'
 LOG_FILE = '/home/ec2-user/deploy/host_status.txt'
 API_HASH_SEED = 'm1ra1eAp1Dep10y'
@@ -181,7 +182,7 @@ def get_access_per_min():
 
     if (count_minutes_ago > 200):
         if count_20_minutes_ago * 3 < count_minutes_ago:
-            return count_minutes_ago + '!'
+            return f"{count_minutes_ago}!"
     return count_minutes_ago
 
 def count_access_log(log_file, time_20_minutes_ago_str, time_1_minutes_ago_str, stop_at):
@@ -304,8 +305,21 @@ def http_call_post(url, headers = {}, payload = {}):
 
     exit(0)
 
+def get_imds_token():
+    # AL2023 は IMDSv2 必須（トークンなしの GET は 401 になる）なので、先にトークンを取得する
+    request = urllib.request.Request(AWS_IMDS_TOKEN_URL, method='PUT', headers={'X-aws-ec2-metadata-token-ttl-seconds': '60'})
+    try:
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return response.read().decode("utf-8")
+    except Exception as e:
+        print(e, 'get_imds_token : error occurred')
+        return ''
+
 def get_instance_id():
-    instance_id = http_call(AWS_INSTANCE_ID_GET_URL)
+    token = get_imds_token()
+    # トークンが取れなければ IMDSv1（ヘッダーなし）で試す
+    headers = {'X-aws-ec2-metadata-token': token} if token else {}
+    instance_id = http_call(AWS_INSTANCE_ID_GET_URL, headers)
     #print (f"instance_id = {instance_id}")
     if not instance_id:
         abort(f"could not get instance_id")

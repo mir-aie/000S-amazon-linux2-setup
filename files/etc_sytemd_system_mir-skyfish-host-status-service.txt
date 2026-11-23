@@ -1,11 +1,11 @@
 #
 # Skyfish ホスト状態を送信するサービス
-# mir-skyfish-host-status.timer から毎分起動される（単体で常駐はしない）
+# mir-skyfish-host-status.timer から10分毎に起動される（単体で常駐はしない）
 #
 # /etc/systemd/system/mir-skyfish-host-status.service
 
 [Unit]
-Description="Skyfish host update"
+Description="Skyfish host status"
 # ネットワークが使える状態になってから実行する
 After=network.target
 Requires=network.target

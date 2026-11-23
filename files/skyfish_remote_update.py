@@ -15,6 +15,7 @@ import hashlib
 from urllib.error import URLError, HTTPError
 import datetime
 
+AWS_IMDS_TOKEN_URL = 'http://169.254.169.254/latest/api/token'
 AWS_INSTANCE_ID_GET_URL = 'http://169.254.169.254/latest/meta-data/instance-id/'
 LARAVEL_PERMS_SCRIPT = '/home/ec2-user/bin/laravel_shared_perms.sh'
 FINISHED_REQUEST_FILE = '/home/ec2-user/deploy/remote_deploy_finished_request_id.txt'
@@ -433,8 +434,21 @@ def put_result():
     result = http_call_post(api_url, headers, response)
     return result
 
+def get_imds_token():
+    # AL2023 は IMDSv2 必須（トークンなしの GET は 401 になる）なので、先にトークンを取得する
+    request = urllib.request.Request(AWS_IMDS_TOKEN_URL, method='PUT', headers={'X-aws-ec2-metadata-token-ttl-seconds': '60'})
+    try:
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return response.read().decode("utf-8")
+    except Exception as e:
+        print(e, 'get_imds_token : error occurred')
+        return ''
+
 def get_instance_id():
-    instance_id = http_call(AWS_INSTANCE_ID_GET_URL)
+    token = get_imds_token()
+    # トークンが取れなければ IMDSv1（ヘッダーなし）で試す
+    headers = {'X-aws-ec2-metadata-token': token} if token else {}
+    instance_id = http_call(AWS_INSTANCE_ID_GET_URL, headers)
     #print (f"instance_id = {instance_id}")
     if not instance_id:
         abort(f"could not get instance_id")

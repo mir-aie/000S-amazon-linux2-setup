@@ -84,14 +84,14 @@ cd $DIR
 
 # vhost
 
-curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_check.txt
+curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_check.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf
 echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-check.conf"
 
 # supervisord / queue worker
-curl -o supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf_check.txt
+curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf_check.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"

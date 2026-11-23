@@ -43,6 +43,57 @@ set_laravel_perms() {
     fi
 }
 
+# サーバの PHP に、Laravel と依存パッケージが対応しているかを確認する（非対応なら 1 を返す）
+# 引数: Laravel プロジェクトのディレクトリ
+check_php_compat() {
+    local dir=$1
+    local php_ver=`php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'`
+    local php_id=`php -r 'echo PHP_VERSION_ID;'`
+
+    echo "PHP $php_ver への対応を確認しています..."
+
+    if [ ! -f "$dir/composer.lock" ]; then
+        echo "エラー: $dir/composer.lock がないため、PHP $php_ver に対応しているか確認できません"
+        return 1
+    fi
+
+    # 1. Laravel のバージョン（composer.lock から取得。例: 11.31.0）
+    local laravel_ver=`php -r '
+        $lock = json_decode(file_get_contents($argv[1]), true);
+        foreach (($lock["packages"] ?? []) as $p) {
+            if ($p["name"] === "laravel/framework") { echo ltrim($p["version"], "v"); }
+        }' -- "$dir/composer.lock"`
+    local laravel_major=${laravel_ver%%.*}
+
+    if ! [[ "$laravel_major" =~ ^[0-9]+$ ]]; then
+        echo "エラー: composer.lock から Laravel のバージョンを取得できません (laravel/framework: '$laravel_ver')"
+        return 1
+    fi
+
+    # PHP のバージョンごとに、公式に対応している Laravel の最小メジャーバージョン
+    #   PHP 8.4 → Laravel 11 以上 / PHP 8.3 → Laravel 10 以上
+    local min_laravel=0
+    if [ "$php_id" -ge 80400 ]; then
+        min_laravel=11
+    elif [ "$php_id" -ge 80300 ]; then
+        min_laravel=10
+    fi
+
+    if [ "$laravel_major" -lt "$min_laravel" ]; then
+        echo "エラー: Laravel $laravel_ver は PHP $php_ver に対応していません（Laravel $min_laravel 以上が必要です）"
+        echo "        Laravel をアップグレードしてから、再度実行してください"
+        return 1
+    fi
+    echo "OK: Laravel $laravel_ver"
+
+    # 2. 依存パッケージが要求する PHP バージョン・拡張モジュール（composer.lock をもとに確認）
+    if ! (cd "$dir" && composer check-platform-reqs --lock --no-dev); then
+        echo "エラー: 依存パッケージが PHP $php_ver / このサーバの拡張モジュールに対応していません（上の failed / missing の行を確認してください）"
+        return 1
+    fi
+    echo "OK: 依存パッケージ"
+}
+
 if [ $# -ne 3 ]; then
   echo "これは、新規の本番Laravelプロジェクトをサーバ環境にインストールするスクリプトです。"
   echo "例： ./sykfish_setup.sh git@github.com:mir-ai/t102L-laravel-rd.git t102L-laravel-rd rd.mir-ai.net"
@@ -56,6 +107,12 @@ BASENAME=$2
 DOMAIN=$3
 
 DIR=$BASEDIR$BASENAME
+
+# 中止時に $DIR を削除するので、プロジェクトコードが空や / を含む場合は受け付けない
+if [ -z "$BASENAME" ] || [[ "$BASENAME" == */* ]] || [[ "$BASENAME" == .* ]]; then
+    echo "エラー: プロジェクトコード '$BASENAME' が不正です"
+    exit 1
+fi
 
 if [ -d $DIR ]; then
     echo "エラー: すでに $DIR ディレクトリが存在しています"
@@ -79,7 +136,21 @@ sudo chown $EXEC_USER $DIR
 cd $DIR
 
 git clone $GIT_SSH sky
+if [ ! -d sky ]; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo "エラー: git clone に失敗しました。中止します（$DIR は削除しました）"
+    exit 1
+fi
 cd sky
+
+# .env の取得や composer install の前に、PHP のバージョンへの対応を確認する
+if ! check_php_compat .; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo
+    echo "中止しました（作成途中の $DIR は削除しました）"
+    exit 1
+fi
+
 /home/ec2-user/bin/skyfish_setup_env.py $BASENAME
 
 composer install --no-dev --optimize-autoloader
@@ -102,14 +173,14 @@ ln -s fish test
 # vhost
 
 STAGE=live
-curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_live.txt
+curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_live.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 
 STAGE=test
-curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_test.txt
+curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_test.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
@@ -118,29 +189,31 @@ echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
 DOMAIN_TEST="test-$DOMAIN"
 
 # supervisord / queue worker
-curl -o supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf.txt
+curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_suprevisord_confd_conf.txt
 $SED -i "s/BASENAME/$BASENAME/" supervisor.conf
 sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
 echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 
 # systemd / system
-curl -o systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_timer.txt
-$SED -i "s/BASENAME/$BASENAME/" systemd.timer
-sudo mv systemd.timer /etc/systemd/system/mir-$BASENAME.timer
-echo "> /etc/systemd/system/mir-$BASENAME.timer"
-
-curl -o systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_service.txt
-$SED -i "s/BASENAME/$BASENAME/" systemd.service
-sudo mv systemd.service /etc/systemd/system/mir-$BASENAME.service
-echo "> /etc/systemd/system/mir-$BASENAME.service"
-
-sudo chown root /etc/systemd/system/mir-$BASENAME.*
-sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now mir-$BASENAME.timer
-sudo systemctl start mir-$BASENAME.timer
-systemctl list-timers
+# 無効化: 雛形の ExecStart (/home/ec2-user/bin/mir-<プロジェクトコード>.py) に対応するスクリプトが無く、
+#         有効にすると毎分失敗するタイマーができるため。プロジェクト専用のタイマーが必要になったら、
+#         ~/bin/etc_sytemd_system_BASENAME_*.txt を元に手動で作成する。
+#curl -fo systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
+#$SED -i "s/BASENAME/mir-$BASENAME/g" systemd.timer
+#sudo mv systemd.timer /etc/systemd/system/mir-$BASENAME.timer
+#echo "> /etc/systemd/system/mir-$BASENAME.timer"
+#
+#curl -fo systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
+#$SED -i "s/BASENAME/mir-$BASENAME/g" systemd.service
+#sudo mv systemd.service /etc/systemd/system/mir-$BASENAME.service
+#echo "> /etc/systemd/system/mir-$BASENAME.service"
+#
+#sudo chown root /etc/systemd/system/mir-$BASENAME.*
+#sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
+#
+#sudo systemctl daemon-reload
+#sudo systemctl enable --now mir-$BASENAME.timer
+#systemctl list-timers
 
 # mysql
 DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`

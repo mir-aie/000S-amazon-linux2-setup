@@ -1,11 +1,11 @@
 #
-# Skyfish ホスト状態を送信するサービス
-# mir-skyfish-remote-update.timer から毎分起動される（単体で常駐はしない）
+# Skyfish 本番プログラムを遠隔で更新するサービス
+# mir-skyfish-remote-update.timer から10分毎に起動される（単体で常駐はしない）
 #
 # /etc/systemd/system/mir-skyfish-remote-update.service
 
 [Unit]
-Description="Skyfish host update"
+Description="Skyfish remote update"
 # ネットワークが使える状態になってから実行する
 After=network.target
 Requires=network.target
@@ -14,7 +14,7 @@ Requires=network.target
 # 実行時のカレントディレクトリ
 WorkingDirectory=/home/ec2-user/bin/
 # 実行するスクリプト
-ExecStart=/home/ec2-user/bin/skyfish_remote_update.py.py
+ExecStart=/home/ec2-user/bin/skyfish_remote_update.py
 # ec2-user 権限で実行する
 User=ec2-user
 Group=ec2-user

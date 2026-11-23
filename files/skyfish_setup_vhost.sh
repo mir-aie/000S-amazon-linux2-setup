@@ -40,7 +40,7 @@ read -p "よろしいですか？ (y/N): " yn
 case "$yn" in [yY]*) ;; *) echo "abort." ; exit ;; esac
 
 STAGE=live
-curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
+curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf
@@ -49,7 +49,7 @@ sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
 echo "> $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf"
 
 STAGE=test
-curl -o vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
+curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf.txt
 $SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
 $SED -i "s/BASENAME/$BASENAME/" vhost.conf
 $SED -i "s/STAGE/$STAGE/" vhost.conf

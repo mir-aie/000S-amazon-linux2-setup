@@ -1,4 +1,7 @@
-/var/www/production/*/*/storage/logs/laravel.log {
+# live / test は sky / fish へのシンボリックリンクなので、実体の sky / fish だけを指定する
+# （*/*/ にすると live→sky 経由で同じログに二重に一致する）
+/var/www/production/*/sky/storage/logs/laravel.log
+/var/www/production/*/fish/storage/logs/laravel.log {
     missingok
     daily
     dateext
