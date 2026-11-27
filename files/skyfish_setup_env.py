@@ -30,12 +30,15 @@ def main(argvs):
     global instance_id
     global response
 
+    # エラー時は abort() で exit 1 する（呼び出し元の skyfish_setup.sh が終了コードで中止を判断する）
+    if not argvs:
+        abort("skyfish_setup_env abort : usage: skyfish_setup_env.py APP_CODE")
+
     for app_code in argvs:
 
         # Make hash for authorization
         request_time = int(time.time())
         original = f"{request_time}{API_HASH_SEED}{app_code}".encode('utf8')
-        print (f"update_env() original {original}")
         request_hash = hashlib.sha256(original).hexdigest()
 
         # call deploy api to get latest production env.
@@ -49,30 +52,28 @@ def main(argvs):
         result = http_call(api_url, headers)
 
         if not result:
-            #log_write(f"api return empty.")
-            print ("skyfish_setup_env abort : api result empty")
+            abort("skyfish_setup_env abort : api result empty")
 
         if '{' not in result:
-            print ("skyfish_setup_env abort : api result has no {")
-            return
+            abort("skyfish_setup_env abort : api result has no {")
 
-        cmd = json.loads(result)
+        try:
+            cmd = json.loads(result)
+        except json.JSONDecodeError as e:
+            abort(f"skyfish_setup_env abort : api result is not valid JSON ({e})")
 
         if ('success' not in cmd):
-            print ("skyfish_setup_env abort : api result has no success")
-            return
+            abort("skyfish_setup_env abort : api result has no success")
 
         if ('production_env' not in cmd):
-            print ("skyfish_setup_env abort : api result has no production_env")
-            return
+            abort("skyfish_setup_env abort : api result has no production_env")
 
         production_env = cmd['production_env']
 
         # Check if env file contains proper entry
 
         if ('APP_NAME' not in production_env):
-            print ("skyfish_setup_env abort : .env has no APP_NAME")
-            return
+            abort("skyfish_setup_env abort : .env has no APP_NAME")
 
         # backup current env file
         tgt_path = ".env"
@@ -109,8 +110,8 @@ def http_call(url, headers = {}):
         return ''
 
 def abort(msg):
-    print (msg)
-    exit(1)
+    print (msg, file=sys.stderr)
+    sys.exit(1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

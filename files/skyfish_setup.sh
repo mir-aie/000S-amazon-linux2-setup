@@ -151,18 +151,43 @@ if ! check_php_compat .; then
     exit 1
 fi
 
-/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
+if ! /home/ec2-user/bin/skyfish_setup_env.py $BASENAME; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo
+    echo "エラー: deploy から .env を取得できませんでした（sky）。中止します（作成途中の $DIR は削除しました）"
+    exit 1
+fi
 
-composer install --no-dev --optimize-autoloader
+if ! composer install --no-dev --optimize-autoloader; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo
+    echo "エラー: composer install に失敗しました（sky）。中止します（作成途中の $DIR は削除しました）"
+    exit 1
+fi
 set_laravel_perms .
 git pull
 cd -
 
 git clone $GIT_SSH fish
+if [ ! -d fish ]; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo "エラー: git clone に失敗しました（fish）。中止します（$DIR は削除しました）"
+    exit 1
+fi
 cd fish
-/home/ec2-user/bin/skyfish_setup_env.py $BASENAME
+if ! /home/ec2-user/bin/skyfish_setup_env.py $BASENAME; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo
+    echo "エラー: deploy から .env を取得できませんでした（fish）。中止します（作成途中の $DIR は削除しました）"
+    exit 1
+fi
 
-composer install --no-dev --optimize-autoloader
+if ! composer install --no-dev --optimize-autoloader; then
+    cd $BASEDIR && rm -rf "$DIR"
+    echo
+    echo "エラー: composer install に失敗しました（fish）。中止します（作成途中の $DIR は削除しました）"
+    exit 1
+fi
 set_laravel_perms .
 git pull
 cd -
