@@ -1,10 +1,10 @@
 #
 # BASENAME サービス
 #
-# /etc/systemd/system/BASENAME.service
+# /etc/systemd/system/mir-BASENAME.service
 
 [Unit]
-Description="BASENAME"
+Description="mir-BASENAME"
 # ネットワークが使える状態になってから実行する
 After=network-online.target
 Wants=network-online.target
@@ -23,9 +23,9 @@ Group=apache
 Type=oneshot
 
 #  cd /etc/systemd/system/
-#  sudo vi BASENAME.service
-#  sudo vi BASENAME.timer
-#  sudo systemd-analyze verify /etc/systemd/system/BASENAME.*
+#  sudo vi mir-BASENAME.service
+#  sudo vi mir-BASENAME.timer
+#  sudo systemd-analyze verify /etc/systemd/system/mir-BASENAME.*
 #  sudo systemctl daemon-reload
-#  sudo systemctl start BASENAME.service      # 手動で1回だけ実行して動作確認
-#  journalctl -n 50 -u BASENAME.service
+#  sudo systemctl start mir-BASENAME.service      # 手動で1回だけ実行して動作確認
+#  journalctl -n 50 -u mir-BASENAME.service

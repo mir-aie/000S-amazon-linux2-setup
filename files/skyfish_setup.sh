@@ -223,15 +223,16 @@ echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 # 無効化: 雛形の ExecStart (/home/ec2-user/bin/mir-<プロジェクトコード>.py) に対応するスクリプトが無く、
 #         有効にすると毎分失敗するタイマーができるため。プロジェクト専用のタイマーが必要になったら、
 #         ~/bin/etc_sytemd_system_BASENAME_*.txt を元に手動で作成する。
-curl -fo /tmp/systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
-$SED -i "s/BASENAME/mir-$BASENAME/g" /tmp/systemd.timer
-sudo mv /tmp/systemd.timer /etc/systemd/system/mir-$BASENAME.timer
-echo "> /etc/systemd/system/mir-$BASENAME.timer"
 #
 curl -fo /tmp/systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
-$SED -i "s/BASENAME/mir-$BASENAME/g" /tmp/systemd.service
+$SED -i "s/BASENAME/$BASENAME/g" /tmp/systemd.service
 sudo mv /tmp/systemd.service /etc/systemd/system/mir-$BASENAME.service
 echo "> /etc/systemd/system/mir-$BASENAME.service"
+#
+curl -fo /tmp/systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
+$SED -i "s/BASENAME/$BASENAME/g" /tmp/systemd.timer
+sudo mv /tmp/systemd.timer /etc/systemd/system/mir-$BASENAME.timer
+echo "> /etc/systemd/system/mir-$BASENAME.timer"
 #
 sudo chown root /etc/systemd/system/mir-$BASENAME.*
 sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
@@ -299,4 +300,4 @@ echo "/etc/systemd/system/mir-$BASENAME.system"
 echo "/etc/systemd/system/mir-$BASENAME.timer"
 echo "systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*"
 echo "systemctl list-timers mir-$BASENAME.timer"
-
+echo "journalctl -n 50 -u mir-$BASENAME.service"

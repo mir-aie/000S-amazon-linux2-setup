@@ -1,12 +1,12 @@
 #
-# BASENAMEスクリプト（BASENAME.service）を起動するタイマー
+# mir-BASENAMEスクリプト（mir-BASENAME.service）を起動するタイマー
 #
 # https://documentation.suse.com/ja-jp/sle-micro/6.0/html/Micro-systemd-working-with-timers/index.html#systemd-timer-types-realtime
 #
-# /etc/systemd/system/BASENAME.timer
+# /etc/systemd/system/mir-BASENAME.timer
 
 [Unit]
-Description="Run BASENAME"
+Description="Run mir-BASENAME"
 
 [Timer]
 # 毎日（土日を含む）毎分 01 秒に実行する
@@ -14,7 +14,7 @@ Description="Run BASENAME"
 OnCalendar=*-*-* *:*:01
 
 # 起動するサービス
-Unit=BASENAME.service
+Unit=mir-BASENAME.service
 
 [Install]
 # enable するとサーバー起動時にタイマーが自動で有効になる
@@ -22,11 +22,11 @@ WantedBy=timers.target
 
 
 #  cd /etc/systemd/system/
-#  sudo vi BASENAME.timer
-#  sudo vi BASENAME.service
-#  sudo systemd-analyze verify /etc/systemd/system/BASENAME.*
+#  sudo vi mir-BASENAME.timer
+#  sudo vi mir-BASENAME.service
+#  sudo systemd-analyze verify /etc/systemd/system/mir-BASENAME.*
 #  sudo systemctl daemon-reload
-#  sudo systemctl enable BASENAME.timer       # 初回のみ：起動時に自動で有効にする
-#  sudo systemctl restart BASENAME.timer
-#  systemctl list-timers BASENAME.timer       # 次回の実行予定を確認
-#  journalctl -n 50 -u BASENAME.service       # 実行ログを確認
+#  sudo systemctl enable mir-BASENAME.timer       # 初回のみ：起動時に自動で有効にする
+#  sudo systemctl restart mir-BASENAME.timer
+#  systemctl list-timers mir-BASENAME.timer       # 次回の実行予定を確認
+#  journalctl -n 50 -u mir-BASENAME.service       # 実行ログを確認
