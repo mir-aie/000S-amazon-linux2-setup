@@ -299,8 +299,7 @@ sudo sh -c 'printf "127.0.0.1   loopback-$DOMAIN\n127.0.0.1   loopback-test-$DOM
 [5. httpd]
 cat $VHOST_LIVE
 cat $VHOST_TEST
-sudo apachectl configtest
-sudo systemctl reload httpd
+sudo apachectl configtest && sudo systemctl reload httpd
 
 [6. supervisor / queue worker]
 # 雛形はコメントアウトされているので、queue を使う場合は # を外す

@@ -286,8 +286,7 @@ sudo sh -c 'echo "127.0.0.1   loopback-$DOMAIN" >> /etc/hosts'
 
 [5. httpd]
 cat $VHOST_CONF
-sudo apachectl configtest
-sudo systemctl reload httpd
+sudo apachectl configtest && sudo systemctl reload httpd
 
 [6. supervisor / queue worker]
 # 雛形はコメントアウトされているので、queue を使う場合は # を外す
