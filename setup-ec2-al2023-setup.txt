@@ -59,11 +59,8 @@ diff /etc/httpd/conf/httpd.conf.org  /etc/httpd/conf/httpd.conf
 # Safariのhttp2エラーを回避
 sudo sed -i -e "s/^LoadModule/#LoadModule/g" /etc/httpd/conf.modules.d/10-h2.conf
 
-# KeepAlive On
-sudo sh -c 'echo "KeepAlive On" > /etc/httpd/conf.d/keepalive.conf'
-
-# KeepAliveTimeout
-sudo sh -c 'echo "KeepAliveTimeout 120" >> /etc/httpd/conf.d/keepalive.conf'
+# KeepAlive On / KeepAliveTimeout（1つのコマンドで2行とも書き込む）
+printf 'KeepAlive On\nKeepAliveTimeout 120\n' | sudo tee /etc/httpd/conf.d/keepalive.conf
 
 # Apacheの起動
 sudo systemctl start httpd
@@ -114,9 +111,9 @@ sudo dnf install -y php8.4 php8.4-cli php8.4-fpm php8.4-common php8.4-devel php8
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
 sudo sed -i "s/memory_limit = 128M/memory_limit = 512M/" /etc/php.ini
-sudo sed -i "s/post_max_size = 8M/post_max_size = 64M/" /etc/php.ini
+sudo sed -i -E 's/^post_max_size *=.*/post_max_size = 64M/' /etc/php.ini
 sudo sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php.ini
-sudo sed -i "s/; max_input_vars = 1000/max_input_vars = 5000/" /etc/php.ini
+sudo sed -i -E 's/^;? *max_input_vars *=.*/max_input_vars = 5000/' /etc/php.ini
 sudo sed -i "s/max_file_uploads = 20/max_file_uploads = 50/" /etc/php.ini
 sudo sed -i "s/;date.timezone =/date.timezone = Asia\\/Tokyo/" /etc/php.ini
 diff /etc/php.ini.default /etc/php.ini

@@ -13,6 +13,7 @@ echo "     NICKNAME=$NICKNAME"
 chk "タイムゾーン Asia/Tokyo"    "[ \"\$(timedatectl show -p Timezone --value)\" = Asia/Tokyo ]"
 chk "LANG=ja_JP.UTF-8"          "localectl status | grep -q 'LANG=ja_JP.UTF-8'"
 chk "ja_JP ロケールが使える"     "locale -a | grep -qi '^ja_JP.utf8'"
+echo "未適用の更新数を確認中..."
 echo "     未適用の更新数: $(dnf check-update -q 2>/dev/null | grep -c '^[a-zA-Z0-9]')"
 
 sec サービス（起動中 / 自動起動）
@@ -41,7 +42,7 @@ for f in /var/www/html/index.html /etc/httpd/conf.d/{security,security_strict,vh
   chk "$f（存在・404でない）" "test -s $f && ! grep -q '404: Not Found' $f"
 done
 chk "ログに X-Forwarded-For"   "grep -q 'X-Forwarded-For}i\" combined' /etc/httpd/conf/httpd.conf"
-chk "h2 モジュール無効"         "! httpd -M 2>/dev/null | grep -q http2_module"
+chk "h2 モジュール無効"         "! httpd -M 2>/dev/null | grep -qE '^ *http2_module '"   # proxy_http2_module は対象外
 chk "KeepAlive On"              "grep -q '^KeepAlive On' /etc/httpd/conf.d/keepalive.conf"
 chk "KeepAliveTimeout 120"      "grep -q '^KeepAliveTimeout 120' /etc/httpd/conf.d/keepalive.conf"
 chk "LimitRequestBody 64MB"     "grep -q '^LimitRequestBody 67108864' /etc/httpd/conf.d/security_strict.conf"
@@ -72,7 +73,7 @@ chk "php-fpm user = apache"   "grep -q '^user = apache' /etc/php-fpm.d/www.conf"
 chk "php-fpm group = apache"  "grep -q '^group = apache' /etc/php-fpm.d/www.conf"
 chk "php-fpm ワーカーが apache で動いている" "ps -o user= -C php-fpm | grep -q apache"
 chk "php 8.4"                 "php -r 'exit(PHP_VERSION_ID >= 80400 && PHP_VERSION_ID < 80500 ? 0 : 1);'"
-chk "redis 拡張は dnf 版のみ（50-redis.ini なし）" "[ ! -e /etc/php.d/50-redis.ini ]"
+chk "redis 拡張は dnf 版のみ（50-redis.ini は php8.4-pecl-redis6 のもの）" "[ ! -e /etc/php.d/50-redis.ini ] || rpm -qf /etc/php.d/50-redis.ini"
 
 sec apache / ec2-user の共有設定
 chk "ec2-user が apache グループ" "id -nG ec2-user | grep -qw apache"
@@ -135,7 +136,8 @@ sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-*.{service,timer} 2>
 ls -l /etc/systemd/system/ | grep -iE 'skyfish|BASENAME|supervisord'
 
 sec CloudWatch Agent
-chk "設定ファイルあり"          "sudo test -s /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+# fetch-config で読み込んだ設定は amazon-cloudwatch-agent.d/ の下に移される
+chk "設定ファイルあり (audit ログ)" "sudo grep -q 'audit-\*.log' /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/file_amazon-cloudwatch-agent.json"
 chk "IAM ロールあり"            "aws sts get-caller-identity"
 
 sec Postfix（SMTP 受信サーバのみ）
