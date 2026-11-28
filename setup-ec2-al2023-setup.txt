@@ -27,7 +27,7 @@ echo latest | sudo tee /etc/dnf/vars/releasever
 # パッケージが存在するかを確認する
 for p in php8.4-pecl-apcu php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack \
          php-pear ImageMagick ImageMagick-devel sox redis6 python3-boto3 \
-         amazon-cloudwatch-agent postfix mariadb1011-server cronie acl; do
+         amazon-cloudwatch-agent postfix mariadb1011-server cronie acl libatomic; do
   dnf list -q "$p" >/dev/null 2>&1 && echo "OK  $p" || echo "NG  $p"
 done
 
@@ -193,7 +193,9 @@ composer --version
 # node
 # https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
 # ec2-user配下にインストールされる
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+# 公式ビルドの node は libatomic.so.1 を使うが、AL2023 には入っていないので先に入れる
+sudo dnf install -y libatomic
+curl -o-https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install --lts
 node -e "console.log('Running Node.js ' + process.version)"
