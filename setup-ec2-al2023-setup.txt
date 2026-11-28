@@ -319,6 +319,7 @@ curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/mast
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_dev.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_production.sh
 # Laravel の storage を apache / ec2-user 共有にする (usage: laravel_shared_perms.sh /var/www/dev/xxx)
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/laravel_shared_perms.sh
 
