@@ -16,16 +16,18 @@ chk "ja_JP ロケールが使える"     "locale -a | grep -qi '^ja_JP.utf8'"
 echo "     未適用の更新数: $(dnf check-update -q 2>/dev/null | grep -c '^[a-zA-Z0-9]')"
 
 sec サービス（起動中 / 自動起動）
-for s in httpd php-fpm redis6 mariadb supervisord crond; do
+for s in httpd php-fpm redis6 mariadb supervisord crond amazon-cloudwatch-agent; do
   a=$(systemctl is-active $s 2>&1); e=$(systemctl is-enabled $s 2>&1)
   [ "$a" = active ] && [ "$e" = enabled ] && ok "$s ($a/$e)" || ng "$s ($a/$e)"
 done
+chk "supervisord.service: Type=simple / -n" "grep -q '^Type=simple' /etc/systemd/system/supervisord.service && grep -q 'supervisord -n ' /etc/systemd/system/supervisord.service"
 
 sec タイマー
 for t in dnf-automatic.timer mir-skyfish-host-status.timer mir-skyfish-remote-update.timer; do
   a=$(systemctl is-active $t 2>&1); e=$(systemctl is-enabled $t 2>&1)
   [ "$a" = active ] && ok "$t ($a/$e)" || ng "$t ($a/$e)  ※remote-update は本番のみ"
 done
+chk "host-status は10分毎" "grep -q '^OnCalendar=\*-\*-\* \*:00/10:01' /etc/systemd/system/mir-skyfish-host-status.timer"
 systemctl list-timers --all --no-pager | grep -E 'dnf-automatic|skyfish'
 
 sec dnf-automatic
@@ -42,6 +44,8 @@ chk "ログに X-Forwarded-For"   "grep -q 'X-Forwarded-For}i\" combined' /etc/h
 chk "h2 モジュール無効"         "! httpd -M 2>/dev/null | grep -q http2_module"
 chk "KeepAlive On"              "grep -q '^KeepAlive On' /etc/httpd/conf.d/keepalive.conf"
 chk "KeepAliveTimeout 120"      "grep -q '^KeepAliveTimeout 120' /etc/httpd/conf.d/keepalive.conf"
+chk "LimitRequestBody 64MB"     "grep -q '^LimitRequestBody 67108864' /etc/httpd/conf.d/security_strict.conf"
+chk "vhost で Indexes 無効"      "! grep -h '^ *Options' /etc/httpd/conf.d/vhost-*.conf 2>/dev/null | grep -qE '(^| )\+?Indexes'"
 chk "configtest Syntax OK"      "sudo apachectl configtest 2>&1 | grep -q 'Syntax OK'"
 echo "     $(curl -sI http://localhost/ | head -1)"
 
@@ -49,7 +53,7 @@ sec PHP
 php -v | head -1
 w=$(php -v 2>&1 | grep -iE 'warning|already loaded|unable to load')
 [ -z "$w" ] && ok "PHP 起動時の警告なし" || { ng "PHP 起動時に警告あり"; echo "$w"; }
-for m in bcmath gd mbstring 'Zend OPcache' xml pdo_mysql mysqlnd intl apcu igbinary redis msgpack posix zip soap gmp imagick; do
+for m in bcmath gd mbstring 'Zend OPcache' xml pdo_mysql mysqlnd intl apcu igbinary redis msgpack posix zip soap gmp sodium imagick; do
   chk "拡張 $m" "php -m | grep -qix '$m'"
 done
 chk "expose_php = Off" "php -i | grep -q '^expose_php => Off'"
@@ -58,7 +62,7 @@ while read k v; do
   [ "$a" = "$v" ] && ok "php.ini $k=$a" || ng "php.ini $k=$a（期待値 $v）"
 done <<'EOF'
 memory_limit 512M
-post_max_size 16M
+post_max_size 64M
 upload_max_filesize 16M
 max_input_vars 5000
 max_file_uploads 50
@@ -67,6 +71,15 @@ EOF
 chk "php-fpm user = apache"   "grep -q '^user = apache' /etc/php-fpm.d/www.conf"
 chk "php-fpm group = apache"  "grep -q '^group = apache' /etc/php-fpm.d/www.conf"
 chk "php-fpm ワーカーが apache で動いている" "ps -o user= -C php-fpm | grep -q apache"
+chk "php 8.4"                 "php -r 'exit(PHP_VERSION_ID >= 80400 && PHP_VERSION_ID < 80500 ? 0 : 1);'"
+chk "redis 拡張は dnf 版のみ（50-redis.ini なし）" "[ ! -e /etc/php.d/50-redis.ini ]"
+
+sec apache / ec2-user の共有設定
+chk "ec2-user が apache グループ" "id -nG ec2-user | grep -qw apache"
+chk "php-fpm UMask=0002"        "grep -q '^UMask=0002' /etc/systemd/system/php-fpm.service.d/umask.conf"
+chk "~/.bashrc に umask 0002"   "grep -q '^umask 0002' ~/.bashrc"
+chk "acl (setfacl) あり"        "command -v setfacl"
+chk "supervisord umask=002"     "sudo grep -q '^umask=002' /etc/supervisord/supervisord.conf"
 pecl list 2>/dev/null
 
 sec Redis / MariaDB
@@ -93,7 +106,8 @@ sec ディレクトリ / logrotate
 chk "/var/www/dev ec2-user:apache 2775"  "[ \"\$(stat -c '%U:%G %a' /var/www/dev)\" = 'ec2-user:apache 2775' ]"
 for f in /etc/logrotate.d/laravel.conf /etc/logrotate.d/laravel_dev.conf; do
   chk "$f root:root 644" "[ \"\$(stat -c '%U:%G %a' $f)\" = 'root:root 644' ]"
-  chk "$f 構文OK"        "sudo logrotate -d $f 2>&1 | grep -qv 'error'"
+  chk "$f 構文OK"        "! sudo logrotate -d $f 2>&1 | grep -qi 'error'"
+  chk "$f compress / notifempty" "grep -q '^ *compress' $f && grep -q '^ *notifempty' $f"
 done
 
 sec supervisord
@@ -110,7 +124,8 @@ sudo /usr/local/bin/supervisorctl -c $c status
 
 sec ~/bin スクリプト
 for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py \
-         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh skyfish_setup_stage.sh; do
+         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh skyfish_setup_stage.sh \
+         laravel_shared_perms.sh etc_sytemd_system_BASENAME_service.txt etc_sytemd_system_BASENAME_timer.txt; do
   chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
 done
 chk "*.sh / *.py に実行権" "[ -z \"\$(find ~/bin \( -name '*.sh' -o -name '*.py' \) ! -perm -u+x)\" ]"
@@ -119,8 +134,25 @@ sec systemd ユニット
 sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-*.{service,timer} 2>&1 | grep -v '^$' || ok "verify エラーなし"
 ls -l /etc/systemd/system/ | grep -iE 'skyfish|BASENAME|supervisord'
 
+sec CloudWatch Agent
+chk "設定ファイルあり"          "sudo test -s /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+chk "IAM ロールあり"            "aws sts get-caller-identity"
+
+sec Postfix（SMTP 受信サーバのみ）
+if rpm -q postfix >/dev/null 2>&1; then
+  chk "postfix 起動中"          "systemctl is-active -q postfix"
+  chk "inet_interfaces = all"   "[ \"\$(postconf -h inet_interfaces)\" = all ]"
+  chk "transport_maps 設定"     "postconf -h transport_maps | grep -q /etc/postfix/transport"
+  chk "postfix check"           "sudo postfix check"
+else
+  echo "     postfix 未インストール（SMTP 受信サーバでなければ問題なし）"
+fi
+
 sec その他
-chk "alias lg / lt" "grep -q 'alias lg=' ~/.bash_profile && grep -q 'alias lt=' ~/.bash_profile"
+for a in lg lt cdprd cddev cdsup cdhttpd cdsys upd spu sps art; do
+  chk "alias $a" "grep -q '^alias $a=' ~/.bash_profile"
+done
+chk "~/.bash_profile 構文OK" "bash -n ~/.bash_profile"
 chk "ssh 鍵あり"     "test -s ~/.ssh/id_ed25519.pub"
 chk "GitHub ssh 認証" "ssh -T -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | grep -q 'successfully authenticated'"
 echo "     git user.name=$(git config --global user.name) / email=$(git config --global user.email)"
