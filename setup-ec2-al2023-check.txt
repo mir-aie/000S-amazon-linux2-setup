@@ -124,8 +124,8 @@ chk "/etc/supervisord.conf リンク" "[ \"\$(readlink /etc/supervisord.conf)\" 
 sudo /usr/local/bin/supervisorctl -c $c status
 
 sec ~/bin スクリプト
-for f in skyfish_setup.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py \
-         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh skyfish_setup_stage.sh \
+for f in skyfish_setup_production.sh skyfish_update_test.sh skyfish_deploy.sh skyfish_setup_env.py \
+         skyfish_remote_update.py skyfish_host_status.py skyfish_log_uploader.sh skyfish_setup_dev.sh \
          laravel_shared_perms.sh etc_sytemd_system_BASENAME_service.txt etc_sytemd_system_BASENAME_timer.txt; do
   chk "~/bin/$f" "test -s ~/bin/$f && ! grep -q '404: Not Found' ~/bin/$f"
 done

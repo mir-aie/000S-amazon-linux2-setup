@@ -311,14 +311,14 @@ sudo systemctl is-enabled supervisord
 cd ~
 mkdir -p bin
 cd bin
-curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_production.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_update_test.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_deploy.sh
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_env.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_remote_update.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_host_status.py
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_log_uploader.sh
-curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_stage.sh
+curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/skyfish_setup_dev.sh
 # Laravel の storage を apache / ec2-user 共有にする (usage: laravel_shared_perms.sh /var/www/dev/xxx)
 curl -fO https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/laravel_shared_perms.sh
 
@@ -333,6 +333,8 @@ sudo mv etc_sytemd_system_mir-skyfish-host-status-service.txt /etc/systemd/syste
 sudo mv etc_sytemd_system_mir-skyfish-host-status-timer.txt /etc/systemd/system/mir-skyfish-host-status.timer
 
 #
+sudo sed -i "s/\/var\/run\/acpid.socket/\/run\/acpid.socket/" /usr/lib/systemd/system/acpid.socket
+
 sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-host-status.*
 sudo systemctl daemon-reload
 sudo systemctl enable mir-skyfish-host-status.timer       # 初回のみ：起動時に自動で有効にする
@@ -378,7 +380,7 @@ sudo systemctl start crond
 **** 以下手動
 
 echo 'git用のsshの登録'
-ssh-keygen -t ed25519 -C "obata@mir-ai.co.jp"
+ssh-keygen -t ed25519 -C "dev@mir-ai.co.jp"
 
 cat ~/.ssh/id_ed25519.pub
 **** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
@@ -386,7 +388,8 @@ cat ~/.ssh/id_ed25519.pub
 **** STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP 
 
 git config --global user.name %SERVER_NAME_HERE%
-git config --global user.email obata@mir-ai.co.jp
+git config --global user.email dev@mir-ai.co.jp
+ssh -T git@github.com
 
 
 #　本番環境のみ（遠隔でプログラムを最新にするスクリプトを定期起動するバッチ）

@@ -30,7 +30,7 @@ def main(argvs):
     global instance_id
     global response
 
-    # エラー時は abort() で exit 1 する（呼び出し元の skyfish_setup.sh が終了コードで中止を判断する）
+    # エラー時は abort() で exit 1 する（呼び出し元の skyfish_setup_production.sh が終了コードで中止を判断する）
     if not argvs:
         abort("skyfish_setup_env abort : usage: skyfish_setup_env.py APP_CODE")
 
