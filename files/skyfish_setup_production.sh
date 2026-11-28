@@ -312,6 +312,6 @@ systemctl list-timers $UNIT.timer
 journalctl -n 50 -u $UNIT.service
 
 [Web]
-http://$DOMAIN/
-http://test-$DOMAIN/
+https://$DOMAIN/
+https://test-$DOMAIN/
 EOF
