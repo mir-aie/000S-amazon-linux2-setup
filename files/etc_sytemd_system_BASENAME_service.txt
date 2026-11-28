@@ -11,10 +11,10 @@ Wants=network-online.target
 
 [Service]
 # 実行時のカレントディレクトリ
-WorkingDirectory=/var/www/production/BASENAME/live/
+WorkingDirectory=/var/www/production/live/BASENAME/live/
 
 # 実行するスクリプト
-ExecStart=/usr/bin/php /var/www/production/BASENAME/live/artisan schedule:run
+ExecStart=/usr/bin/php /var/www/production/live/BASENAME/live/artisan schedule:run
 
 # apache 権限で実行する
 User=apache
