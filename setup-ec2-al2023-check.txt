@@ -146,6 +146,13 @@ if rpm -q postfix >/dev/null 2>&1; then
   chk "inet_interfaces = all"   "[ \"\$(postconf -h inet_interfaces)\" = all ]"
   chk "transport_maps 設定"     "postconf -h transport_maps | grep -q /etc/postfix/transport"
   chk "postfix check"           "sudo postfix check"
+  # aws iot の証明書（setup の「7. aws iot の証明書をローカルにコピーする」）
+  d=~/400-awsiot-certs
+  id=c3c5a040a8958d1c7ddc398e5c34b33929e86a4bab50b07a0b88c69a287768e2
+  for f in AmazonRootCA1.pem $id-certificate.pem.crt $id-private.pem.key $id-public.pem.key; do
+    chk "iot 証明書 ${f/$id/<id>}" "test -s $d/$f"
+  done
+  chk "iot 証明書の有効期限内"   "openssl x509 -noout -checkend 0 -in $d/$id-certificate.pem.crt"
 else
   echo "     postfix 未インストール（SMTP 受信サーバでなければ問題なし）"
 fi

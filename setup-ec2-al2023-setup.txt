@@ -528,6 +528,14 @@ for d in /var/www/production/300L-demo01-500001-alert-v3/live /var/www/productio
   ~/bin/laravel_shared_perms.sh $d
 done
 
+7. aws iot の証明書をローカルにコピーする
+
+# aws iot の証明書を取得
+aws s3 cp s3://ss-a-alert-scripts/400-mqtt-certs/250129/AmazonRootCA1.pem /home/ec2-user/400-awsiot-certs/
+aws s3 cp s3://ss-a-alert-scripts/400-mqtt-certs/250129/c3c5a040a8958d1c7ddc398e5c34b33929e86a4bab50b07a0b88c69a287768e2-certificate.pem.crt /home/ec2-user/400-awsiot-certs/
+aws s3 cp s3://ss-a-alert-scripts/400-mqtt-certs/250129/c3c5a040a8958d1c7ddc398e5c34b33929e86a4bab50b07a0b88c69a287768e2-private.pem.key /home/ec2-user/400-awsiot-certs/
+aws s3 cp s3://ss-a-alert-scripts/400-mqtt-certs/250129/c3c5a040a8958d1c7ddc398e5c34b33929e86a4bab50b07a0b88c69a287768e2-public.pem.key /home/ec2-user/400-awsiot-certs/
+
 7. テスト
 
 echo -e "Subject: TEST\n\nTEST" | sendmail -f test@example.com jalert-demo01-500001@smtp.a-alert.net
