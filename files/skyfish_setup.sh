@@ -241,7 +241,8 @@ sudo systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*
 sudo systemctl daemon-reload
 sudo systemctl enable mir-$BASENAME.timer
 sudo systemctl restart mir-$BASENAME.timer
-systemctl list-timers mir-$BASENAME.timer
+sudo systemctl list-timers mir-$BASENAME.timer
+sudo journalctl -n 50 -u mir-$BASENAME.service 
 
 # mysql
 DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
