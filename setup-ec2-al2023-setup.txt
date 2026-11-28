@@ -104,11 +104,12 @@ echo 'php8.4をインストール...'
 dnf list --available 'php*'
 
 # アーキテクチャ (.x86_64) は指定しない（Graviton / aarch64 でも同じ行で入るように）
-# ドライラン
-sudo dnf install --assumeno php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel php8.4-gd php8.4-mbstring php8.4-opcache php8.4-xml php8.4-pdo php8.4-pecl-apcu php8.4-fpm php8.4-mysqlnd php8.4-intl php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack php8.4-process php8.4-zip php8.4-soap php8.4-gmp
-
 # 実行
-sudo dnf install -y php8.4 php8.4-bcmath php8.4-cli php8.4-common php8.4-devel php8.4-gd php8.4-mbstring php8.4-opcache php8.4-xml php8.4-pdo php8.4-pecl-apcu php8.4-fpm php8.4-mysqlnd php8.4-intl php8.4-pecl-igbinary php8.4-pecl-redis6 php8.4-pecl-msgpack php8.4-process php8.4-zip php8.4-soap php8.4-gmp
+sudo dnf install -y php8.4 php8.4-cli php8.4-fpm php8.4-common php8.4-devel php8.4-opcache \
+  php8.4-mbstring php8.4-intl php8.4-gd php8.4-zip php8.4-xml php8.4-pdo php8.4-mysqlnd \
+  php8.4-process php8.4-sodium php8.4-bcmath php-pear \
+  php8.4-gmp  php8.4-pecl-apcu php8.4-pecl-igbinary php8.4-pecl-msgpack php8.4-pecl-redis6 php8.4-soap
+
 
 sudo cp /etc/php.ini /etc/php.ini.default
 sudo sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
@@ -337,6 +338,7 @@ sudo systemd-analyze verify /etc/systemd/system/mir-skyfish-host-status.*
 sudo systemctl daemon-reload
 sudo systemctl enable mir-skyfish-host-status.timer       # 初回のみ：起動時に自動で有効にする
 sudo systemctl restart mir-skyfish-host-status.timer
+sudo systemctl is-enabled mir-skyfish-host-status.timer
 systemctl list-timers mir-skyfish-host-status.timer       # 次回の実行予定を確認
 journalctl -n 50 -u mir-skyfish-host-status.service       # 実行ログを確認
 
@@ -354,6 +356,15 @@ sudo systemctl reload httpd
 
 echo 'alias lg="tail -f storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
 echo 'alias lt="tail -1000 storage/logs/laravel.log| grep -v -E '^#'"' >> ~/.bash_profile
+echo 'alias cdprd="cd /var/www/production/; pwd"' >> ~/.bash_profile
+echo 'alias cddev="cd /var/www/dev/; pwd"' >> ~/.bash_profile
+echo 'alias cdsup="cd /etc/supervisord/conf.d; pwd"' >> ~/.bash_profile
+echo 'alias cdhttpd="cd /etc/httpd/conf.d; pwd"' >> ~/.bash_profile
+echo 'alias cdsys="cd /etc/systemd/system; pwd"' >> ~/.bash_profile
+echo 'alias upd="git pull && php artisan optimize && ~/bin/laravel_shared_perms.sh . && php artisan queue:restart"' >> ~/.bash_profile
+echo 'alias spu="sudo /usr/local/bin/supervisorctl update"' >> ~/.bash_profile
+echo 'alias sps="sudo /usr/local/bin/supervisorctl status"' >> ~/.bash_profile
+echo 'alias art="sudo -u apache php artisan"' >> ~/.bash_profile
 
 # crontab よ再び
 sudo dnf install cronie -y
@@ -414,9 +425,6 @@ sudo systemctl status amazon-cloudwatch-agent.service
 Webサーバーを動かすユーザーはapacheに統一する
 ============================================
 結論：Webは今のまま apache ユーザーで動かし、artisan も apache ユーザーで実行する運用をおすすめします。 実行ユーザーを1つに揃えれば、パーミッションの衝突はなくなります。
-
-ec2-user で動かすのをおすすめしない理由
-ec2-user はパスワードなしで sudo が使えます。php-fpm を ec2-user で動かすと、Webアプリに脆弱性があった場合、攻撃者がそのまま root 権限まで取れてしまいます。Webプロセスは sudo 権限のないユーザー（apache）で動かすのが安全です。
 
 対策1：実行ユーザーを apache に揃える（根本対策）
 
