@@ -3,7 +3,7 @@
 # Skyfish setup dev
 #
 # 検証環境の EC2 サーバに、新しい Laravel プロジェクトを設置するスクリプト
-#   - 設置場所: /var/www/dev/<プロジェクトコード>
+#   - 設置場所: /var/www/dev/<アプリコード>
 #   - .env は設置しない（実行後に手で設置する）
 #   - httpd の vhost / supervisor / systemd timer のファイルを設置する
 #   - httpd の再読込み・supervisorctl・timer の有効化は行わず、実行するコマンドを最後に表示する
@@ -45,19 +45,34 @@ if [ "$(whoami)" != "$EXEC_USER" ]; then
     exit 1
 fi
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 3 ] && [ $# -ne 4 ]; then
     echo "これは、新規の検証用 Laravel プロジェクトを $BASEDIR に設置するスクリプトです。"
     echo
     echo "例： ./skyfish_setup_dev.sh 300L-00-core-alert-v3 300L-miraie-999999-alert-v3 check-miraie.a-alert.net"
-    echo "                            ↑GITコード            ↑プロジェクトコード         ↑検証用URL"
+    echo "                            ↑GITコード            ↑アプリコード         ↑検証用URL"
     echo
     echo "GITコードは git@github.com:mir-aie/xxx.git のように URL で指定することもできます"
+    echo
+    echo "4番目に .env のパスを指定すると、composer install の前にコピーします（おすすめ）"
+    echo "例： ./skyfish_setup_dev.sh 300L-00-core-alert-v3 300L-miraie-999999-alert-v3 check-miraie.a-alert.net ~/env/300L-miraie-999999-alert-v3.env"
+    echo "  .env を指定しない場合は composer install のスクリプト (artisan package:discover) を実行せず、"
+    echo "  .env を置いた後に手で実行するよう案内します"
     exit 1
 fi
 
 GITNAME=$1
 BASENAME=$2
 DOMAIN=$3
+ENV_SRC=${4:-}
+
+# .env を指定した場合は、あとで cd しても参照できるよう絶対パスにしておく
+if [ -n "$ENV_SRC" ]; then
+    if [ ! -f "$ENV_SRC" ] || [ ! -r "$ENV_SRC" ]; then
+        echo "エラー: .env ファイル '$ENV_SRC' が見つからないか、読めません"
+        exit 1
+    fi
+    ENV_SRC="$(cd "$(dirname "$ENV_SRC")" && pwd)/$(basename "$ENV_SRC")"
+fi
 
 # GITコードがリポジトリ名だけなら mir-aie のリポジトリとみなす
 if [[ "$GITNAME" == *:* ]] || [[ "$GITNAME" == */* ]]; then
@@ -68,7 +83,7 @@ fi
 
 # 中止時に $DIR を削除し、sed の置換にも使うので、英数字と . _ - 以外は受け付けない
 if ! [[ "$BASENAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
-    echo "エラー: プロジェクトコード '$BASENAME' が不正です"
+    echo "エラー: アプリコード '$BASENAME' が不正です"
     exit 1
 fi
 if ! [[ "$DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then
@@ -154,9 +169,10 @@ abort() {
 
 echo "GITコード        : $GITNAME"
 echo "gitリポジトリ    : $GIT_SSH"
-echo "プロジェクトコード: $BASENAME"
+echo "アプリコード: $BASENAME"
 echo "検証用URL        : $DOMAIN"
 echo "設置場所         : $DIR"
+echo ".env             : ${ENV_SRC:-（指定なし。あとで手で設置する）}"
 echo "で作成します。中止する場合は 5 秒以内に Ctrl-C を押してください。"
 echo
 
@@ -184,7 +200,18 @@ cd "$DIR" || abort "$DIR に移動できません"
 # composer install の前に、PHP のバージョンへの対応を確認する
 check_php_compat . || abort "PHP のバージョンに対応していません"
 
-composer install --no-dev --optimize-autoloader || abort "composer install に失敗しました"
+# Laravel は composer install の最後に artisan package:discover を実行し、その中で .env を読む。
+# .env がないと、env の値が必須の config があるプロジェクトでは失敗するので、
+#   - .env を指定した場合: 先にコピーしてから composer install
+#   - 指定しない場合    : スクリプトを実行せずに composer install（.env を置いた後に手で実行する）
+if [ -n "$ENV_SRC" ]; then
+    # php-fpm (apache) が読めるように 0640。グループは /var/www/dev の setgid で apache になる
+    install -m 0640 "$ENV_SRC" .env || abort ".env をコピーできませんでした"
+    echo "コピーしました: $ENV_SRC → $DIR/.env"
+    composer install --no-dev --optimize-autoloader || abort "composer install に失敗しました"
+else
+    composer install --no-dev --optimize-autoloader --no-scripts || abort "composer install に失敗しました"
+fi
 
 if [ -x $PERMS_SCRIPT ]; then
     $PERMS_SCRIPT "$DIR" || abort "$PERMS_SCRIPT に失敗しました"
@@ -220,6 +247,17 @@ echo "  $SERVICE_FILE"
 echo "  $TIMER_FILE"
 
 # 4. 残りの作業（コマンドの表示だけで、実行はしない）
+if [ -n "$ENV_SRC" ]; then
+    ENV_GUIDE="# $ENV_SRC をコピー済み
+cd $DIR
+php artisan key:generate        # APP_KEY が空の場合のみ"
+else
+    ENV_GUIDE="vi $DIR/.env
+cd $DIR
+php artisan key:generate        # APP_KEY が空の場合のみ
+composer run-script post-autoload-dump   # composer install で飛ばした package:discover を実行する"
+fi
+
 cat <<EOF
 
 ========================================================
@@ -227,9 +265,7 @@ cat <<EOF
 ========================================================
 
 [1. .env]
-vi $DIR/.env
-cd $DIR
-php artisan key:generate        # APP_KEY が空の場合のみ
+$ENV_GUIDE
 
 [2. mysql]
 # RDS にマスターユーザーで接続する（ローカルの MariaDB なら sudo mysql）

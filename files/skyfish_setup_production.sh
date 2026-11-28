@@ -3,7 +3,7 @@
 # Skyfish setup production
 #
 # 本番環境の EC2 サーバに、新しい Laravel プロジェクトを設置するスクリプト
-#   - 設置場所: /var/www/production/<プロジェクトコード>/sky (live) と fish (test) の2か所
+#   - 設置場所: /var/www/production/<アプリコード>/sky (live) と fish (test) の2か所
 #   - .env は deploy (https://deploy.pub-sec.net/) から取得する（skyfish_setup_env.py）
 #   - httpd の vhost (live / test) / supervisor / systemd timer のファイルを設置し、timer を有効にする
 #   - httpd の再読込み・supervisorctl は行わず、実行するコマンドを最後に表示する
@@ -53,10 +53,10 @@ if [ $# -ne 3 ]; then
     echo "これは、新規の本番 Laravel プロジェクトを $BASEDIR に設置するスクリプトです。"
     echo
     echo "例： ./skyfish_setup_production.sh git@github.com:mir-aie/t102L-laravel-rd.git t102L-laravel-rd rd.mir-ai.net"
-    echo "                                   ↑GITコード                                  ↑プロジェクトコード ↑本番URL"
+    echo "                                   ↑GITコード                                  ↑アプリコード ↑本番URL"
     echo
     echo "GITコードはリポジトリ名だけ (t102L-laravel-rd) でも指定できます（mir-aie のリポジトリとみなします）"
-    echo "deploy にプロジェクトコードに対応した .env が設定されている必要があります"
+    echo "deploy にアプリコードに対応した .env が設定されている必要があります"
     exit 1
 fi
 
@@ -73,7 +73,7 @@ fi
 
 # 中止時に $DIR を削除し、sed の置換にも使うので、英数字と . _ - 以外は受け付けない
 if ! [[ "$BASENAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
-    echo "エラー: プロジェクトコード '$BASENAME' が不正です"
+    echo "エラー: アプリコード '$BASENAME' が不正です"
     exit 1
 fi
 if ! [[ "$DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then
@@ -179,7 +179,7 @@ env_value() {
 
 echo "GITコード        : $GITNAME"
 echo "gitリポジトリ    : $GIT_SSH"
-echo "プロジェクトコード: $BASENAME"
+echo "アプリコード: $BASENAME"
 echo "本番URL          : $DOMAIN / test-$DOMAIN"
 echo "設置場所         : $DIR/sky (live), $DIR/fish (test)"
 echo ".env             : deploy から取得"
