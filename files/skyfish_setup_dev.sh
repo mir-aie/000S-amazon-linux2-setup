@@ -232,10 +232,11 @@ cd $DIR
 php artisan key:generate        # APP_KEY が空の場合のみ
 
 [2. mysql]
-sudo mysql
+# RDS にマスターユーザーで接続する（ローカルの MariaDB なら sudo mysql）
+mysql -u <RDSのマスターユーザー> -p -h <RDSのエンドポイント>
 create database DATABASE_NAME default charset utf8mb4;
-create user 'DATABASE_USER'@'localhost' identified by 'DATABASE_PASS';
-grant all on DATABASE_NAME.* to 'DATABASE_USER'@'localhost';
+create user '${BASENAME}_stg_user'@'%' identified by '${BASENAME}_stg_pass_XXXX';
+grant all on DATABASE_NAME.* to '${BASENAME}_stg_user'@'%';
 
 [3. migration / キャッシュ]
 cd $DIR

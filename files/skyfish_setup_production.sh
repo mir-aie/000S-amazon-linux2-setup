@@ -1,54 +1,114 @@
 #!/bin/bash
-
-# Skyfish setup
-# 
-# Script to newly setup laravel production
-
+#
+# Skyfish setup production
+#
+# 本番環境の EC2 サーバに、新しい Laravel プロジェクトを設置するスクリプト
+#   - 設置場所: /var/www/production/<プロジェクトコード>/sky (live) と fish (test) の2か所
+#   - .env は deploy (https://deploy.pub-sec.net/) から取得する（skyfish_setup_env.py）
+#   - httpd の vhost (live / test) / supervisor / systemd timer のファイルを設置し、timer を有効にする
+#   - httpd の再読込み・supervisorctl は行わず、実行するコマンドを最後に表示する
+#
+# 検証環境用は skyfish_setup_dev.sh
+#
 # Susumu Obata
 # Created: 2020/9/18
 # Updated: 2021/4/29
 
 echo "----------------------------"
-echo "Skyfish setup"
+echo "Skyfish setup production"
 echo "----------------------------"
 echo
 
-BASEDIR=/var/www/production/
+BASEDIR=/var/www/production
 HTTPD_CONF_DIR=/etc/httpd/conf.d
+SUPERVISOR_CONF_DIR=/etc/supervisord/conf.d
+SYSTEMD_DIR=/etc/systemd/system
 EXEC_USER=ec2-user
-SED=sed
-PWD=`pwd`
+SED="sed"
+SUDO=sudo
+SYSTEMCTL=systemctl
 PERMS_SCRIPT=/home/ec2-user/bin/laravel_shared_perms.sh
+SETUP_ENV=/home/ec2-user/bin/skyfish_setup_env.py
+TEMPLATE_URL=https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files
 
+# 手元の Mac で試すとき（systemctl は実行せず表示だけ）
 if [ -d /Users/obatasusumu ]; then
-    BASEDIR=/Users/obatasusumu/tmp/skyfish/
-    HTTPD_CONF_DIR=/tmp
+    BASEDIR=/Users/obatasusumu/tmp/skyfish/production
+    HTTPD_CONF_DIR=/tmp/skyfish/httpd
+    SUPERVISOR_CONF_DIR=/tmp/skyfish/supervisord
+    SYSTEMD_DIR=/tmp/skyfish/systemd
     EXEC_USER=obatasusumu
     SED=gsed
+    SUDO=
+    SYSTEMCTL="echo systemctl"
+    mkdir -p $BASEDIR $HTTPD_CONF_DIR $SUPERVISOR_CONF_DIR $SYSTEMD_DIR
 fi
 
-if [ ! `whoami` = $EXEC_USER ]; then
+if [ "$(whoami)" != "$EXEC_USER" ]; then
     echo "エラー: $EXEC_USER になって実行してください。例: sudo su --login $EXEC_USER"
-    exit
+    exit 1
 fi
 
-# storage / bootstrap/cache を apache と ec2-user の両方で読み書きできるようにする
-set_laravel_perms() {
-    if [ -x $PERMS_SCRIPT ]; then
-        $PERMS_SCRIPT $1
-    else
-        touch $1/storage/logs/laravel.log
-        chmod -R a+w $1/storage
-        chmod -R a+w $1/bootstrap/cache
+if [ $# -ne 3 ]; then
+    echo "これは、新規の本番 Laravel プロジェクトを $BASEDIR に設置するスクリプトです。"
+    echo
+    echo "例： ./skyfish_setup_production.sh git@github.com:mir-aie/t102L-laravel-rd.git t102L-laravel-rd rd.mir-ai.net"
+    echo "                                   ↑GITコード                                  ↑プロジェクトコード ↑本番URL"
+    echo
+    echo "GITコードはリポジトリ名だけ (t102L-laravel-rd) でも指定できます（mir-aie のリポジトリとみなします）"
+    echo "deploy にプロジェクトコードに対応した .env が設定されている必要があります"
+    exit 1
+fi
+
+GITNAME=$1
+BASENAME=$2
+DOMAIN=$3
+
+# GITコードがリポジトリ名だけなら mir-aie のリポジトリとみなす
+if [[ "$GITNAME" == *:* ]] || [[ "$GITNAME" == */* ]]; then
+    GIT_SSH=$GITNAME
+else
+    GIT_SSH="git@github.com:mir-aie/$GITNAME.git"
+fi
+
+# 中止時に $DIR を削除し、sed の置換にも使うので、英数字と . _ - 以外は受け付けない
+if ! [[ "$BASENAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+    echo "エラー: プロジェクトコード '$BASENAME' が不正です"
+    exit 1
+fi
+if ! [[ "$DOMAIN" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]; then
+    echo "エラー: ドメイン '$DOMAIN' が不正です"
+    exit 1
+fi
+
+DIR=$BASEDIR/$BASENAME
+VHOST_LIVE=$HTTPD_CONF_DIR/vhost-$BASENAME-live.conf
+VHOST_TEST=$HTTPD_CONF_DIR/vhost-$BASENAME-test.conf
+SUPERVISOR_CONF=$SUPERVISOR_CONF_DIR/$BASENAME.conf
+UNIT=mir-$BASENAME
+SERVICE_FILE=$SYSTEMD_DIR/$UNIT.service
+TIMER_FILE=$SYSTEMD_DIR/$UNIT.timer
+
+# 既存のプロジェクトを上書きしないよう、作る予定のファイルが1つでもあれば中止する
+for f in $DIR $VHOST_LIVE $VHOST_TEST $SUPERVISOR_CONF $SERVICE_FILE $TIMER_FILE; do
+    if [ -e "$f" ]; then
+        echo "エラー: すでに $f が存在しています"
+        exit 1
     fi
-}
+done
+
+if [ ! -x $SETUP_ENV ]; then
+    echo "エラー: $SETUP_ENV がないため、deploy から .env を取得できません"
+    exit 1
+fi
 
 # サーバの PHP に、Laravel と依存パッケージが対応しているかを確認する（非対応なら 1 を返す）
 # 引数: Laravel プロジェクトのディレクトリ
 check_php_compat() {
     local dir=$1
-    local php_ver=`php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'`
-    local php_id=`php -r 'echo PHP_VERSION_ID;'`
+    local php_ver php_id laravel_ver laravel_major min_laravel
+    php_ver=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+    php_id=$(php -r 'echo PHP_VERSION_ID;')
 
     echo "PHP $php_ver への対応を確認しています..."
 
@@ -58,12 +118,12 @@ check_php_compat() {
     fi
 
     # 1. Laravel のバージョン（composer.lock から取得。例: 11.31.0）
-    local laravel_ver=`php -r '
+    laravel_ver=$(php -r '
         $lock = json_decode(file_get_contents($argv[1]), true);
         foreach (($lock["packages"] ?? []) as $p) {
             if ($p["name"] === "laravel/framework") { echo ltrim($p["version"], "v"); }
-        }' -- "$dir/composer.lock"`
-    local laravel_major=${laravel_ver%%.*}
+        }' -- "$dir/composer.lock")
+    laravel_major=${laravel_ver%%.*}
 
     if ! [[ "$laravel_major" =~ ^[0-9]+$ ]]; then
         echo "エラー: composer.lock から Laravel のバージョンを取得できません (laravel/framework: '$laravel_ver')"
@@ -72,7 +132,7 @@ check_php_compat() {
 
     # PHP のバージョンごとに、公式に対応している Laravel の最小メジャーバージョン
     #   PHP 8.4 → Laravel 11 以上 / PHP 8.3 → Laravel 10 以上
-    local min_laravel=0
+    min_laravel=0
     if [ "$php_id" -ge 80400 ]; then
         min_laravel=11
     elif [ "$php_id" -ge 80300 ]; then
@@ -94,211 +154,165 @@ check_php_compat() {
     echo "OK: 依存パッケージ"
 }
 
-if [ $# -ne 3 ]; then
-  echo "これは、新規の本番Laravelプロジェクトをサーバ環境にインストールするスクリプトです。"
-  echo "例： ./sykfish_setup.sh git@github.com:mir-ai/t102L-laravel-rd.git t102L-laravel-rd rd.mir-ai.net"
-  echo "                       ↑GITコード                                   ↑プロジェクトコード ↑本番URL"
-  echo "deploy にプロジェクトコードに対応した .env が設定されている必要があります"
-  exit 1
-fi
-
-GITNAME=$1
-BASENAME=$2
-DOMAIN=$3
-
-DIR=$BASEDIR$BASENAME
-
-# 中止時に $DIR を削除するので、プロジェクトコードが空や / を含む場合は受け付けない
-if [ -z "$BASENAME" ] || [[ "$BASENAME" == */* ]] || [[ "$BASENAME" == .* ]]; then
-    echo "エラー: プロジェクトコード '$BASENAME' が不正です"
+# 作成途中の $DIR を削除して中止する
+abort() {
+    cd "$BASEDIR" && rm -rf "$DIR"
+    echo
+    echo "エラー: $1"
+    echo "中止しました（作成途中の $DIR は削除しました）"
     exit 1
-fi
+}
 
-if [ -d $DIR ]; then
-    echo "エラー: すでに $DIR ディレクトリが存在しています"
-    exit
-fi
+# storage / bootstrap/cache を apache と ec2-user の両方で読み書きできるようにする
+set_laravel_perms() {
+    if [ -x $PERMS_SCRIPT ]; then
+        $PERMS_SCRIPT "$1" || abort "$PERMS_SCRIPT に失敗しました ($1)"
+    else
+        echo "警告: $PERMS_SCRIPT がないため、storage のパーミッションを設定していません ($1)"
+    fi
+}
 
-GIT_SSH="$GITNAME"
+# .env の値を取り出す（例: env_value DB_HOST）
+env_value() {
+    grep "^$1=" "$DIR/live/.env" | head -1 | cut -d = -f 2-
+}
 
-echo "GITコード: $GITNAME"
+echo "GITコード        : $GITNAME"
+echo "gitリポジトリ    : $GIT_SSH"
 echo "プロジェクトコード: $BASENAME"
-echo "Webアクセスドメイン: $DOMAIN"
-echo "gitリポジトリ: $GIT_SSH"
-echo "で作成します。"
+echo "本番URL          : $DOMAIN / test-$DOMAIN"
+echo "設置場所         : $DIR/sky (live), $DIR/fish (test)"
+echo ".env             : deploy から取得"
+echo "で作成します。中止する場合は 5 秒以内に Ctrl-C を押してください。"
 echo
-echo "deploy の .env を参照します"
 
 sleep 5
 
-sudo mkdir -p $DIR
-sudo chown $EXEC_USER $DIR
-cd $DIR
+# 1. 雛形を先にすべて取得する（途中で失敗して中途半端に設置されないように）
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
 
-git clone $GIT_SSH sky
-if [ ! -d sky ]; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo "エラー: git clone に失敗しました。中止します（$DIR は削除しました）"
-    exit 1
-fi
-cd sky
+for t in etc_httpd_confd_vhost_conf_live etc_httpd_confd_vhost_conf_test etc_supervisord_confd_conf \
+         etc_sytemd_system_BASENAME_service etc_sytemd_system_BASENAME_timer; do
+    if ! curl -fsS -o "$TMP/$t.txt" "$TEMPLATE_URL/$t.txt"; then
+        echo "エラー: 雛形 $t.txt を取得できませんでした。中止します"
+        exit 1
+    fi
+done
 
-# .env の取得や composer install の前に、PHP のバージョンへの対応を確認する
-if ! check_php_compat .; then
-    cd $BASEDIR && rm -rf "$DIR"
+# 2. プロジェクトを sky (live) / fish (test) の2か所に設置する
+$SUDO mkdir -p "$DIR" || abort "$DIR を作成できません"
+$SUDO chown $EXEC_USER "$DIR" || abort "$DIR の所有者を変更できません"
+
+for stage in sky fish; do
     echo
-    echo "中止しました（作成途中の $DIR は削除しました）"
-    exit 1
-fi
+    echo "===== $stage ====="
+    cd "$DIR" || abort "$DIR に移動できません"
 
-if ! /home/ec2-user/bin/skyfish_setup_env.py $BASENAME; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo
-    echo "エラー: deploy から .env を取得できませんでした（sky）。中止します（作成途中の $DIR は削除しました）"
-    exit 1
-fi
+    git clone "$GIT_SSH" $stage || abort "git clone に失敗しました（$stage）"
+    cd $stage || abort "$DIR/$stage に移動できません"
 
-if ! composer install --no-dev --optimize-autoloader; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo
-    echo "エラー: composer install に失敗しました（sky）。中止します（作成途中の $DIR は削除しました）"
-    exit 1
-fi
-set_laravel_perms .
-git pull
-cd -
+    # .env の取得や composer install の前に、PHP のバージョンへの対応を確認する（同じリポジトリなので sky だけ）
+    if [ $stage = sky ]; then
+        check_php_compat . || abort "PHP のバージョンに対応していません"
+    fi
 
-git clone $GIT_SSH fish
-if [ ! -d fish ]; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo "エラー: git clone に失敗しました（fish）。中止します（$DIR は削除しました）"
-    exit 1
-fi
-cd fish
-if ! /home/ec2-user/bin/skyfish_setup_env.py $BASENAME; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo
-    echo "エラー: deploy から .env を取得できませんでした（fish）。中止します（作成途中の $DIR は削除しました）"
-    exit 1
-fi
+    $SETUP_ENV "$BASENAME" || abort "deploy から .env を取得できませんでした（$stage）"
+    composer install --no-dev --optimize-autoloader || abort "composer install に失敗しました（$stage）"
+    set_laravel_perms "$DIR/$stage"
+    git pull
+done
 
-if ! composer install --no-dev --optimize-autoloader; then
-    cd $BASEDIR && rm -rf "$DIR"
-    echo
-    echo "エラー: composer install に失敗しました（fish）。中止します（作成途中の $DIR は削除しました）"
-    exit 1
-fi
-set_laravel_perms .
-git pull
-cd -
-
+cd "$DIR" || abort "$DIR に移動できません"
 ln -s sky live
 ln -s fish test
 
-# vhost
+# 3. vhost / supervisor / systemd のファイルを設置する
+cd "$TMP" || exit 1
 
-STAGE=live
-curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_live.txt
-$SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
-$SED -i "s/BASENAME/$BASENAME/" vhost.conf
-sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
-echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
+for f in etc_httpd_confd_vhost_conf_live.txt etc_httpd_confd_vhost_conf_test.txt; do
+    $SED -i -e "s/DOMAIN/$DOMAIN/g" -e "s/BASENAME/$BASENAME/g" $f
+done
+for f in etc_supervisord_confd_conf.txt etc_sytemd_system_BASENAME_service.txt etc_sytemd_system_BASENAME_timer.txt; do
+    $SED -i -e "s/BASENAME/$BASENAME/g" $f
+done
 
-STAGE=test
-curl -fo vhost.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_httpd_confd_vhost_conf_test.txt
-$SED -i "s/DOMAIN/$DOMAIN/" vhost.conf
-$SED -i "s/BASENAME/$BASENAME/" vhost.conf
-sudo mv vhost.conf $HTTPD_CONF_DIR/vhost-$BASENAME-$STAGE.conf
-echo "> $HTTPD_CONF_DIR/$BASENAME-$STAGE.conf"
+$SUDO install -m 0644 etc_httpd_confd_vhost_conf_live.txt "$VHOST_LIVE"
+$SUDO install -m 0644 etc_httpd_confd_vhost_conf_test.txt "$VHOST_TEST"
+$SUDO install -m 0644 etc_supervisord_confd_conf.txt "$SUPERVISOR_CONF"
+$SUDO install -m 0644 etc_sytemd_system_BASENAME_service.txt "$SERVICE_FILE"
+$SUDO install -m 0644 etc_sytemd_system_BASENAME_timer.txt "$TIMER_FILE"
 
-DOMAIN_TEST="test-$DOMAIN"
-
-# supervisord / queue worker
-curl -fo supervisor.conf https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_supervisord_confd_conf.txt
-$SED -i "s/BASENAME/$BASENAME/" supervisor.conf
-sudo mv supervisor.conf /etc/supervisord/conf.d/$BASENAME.conf
-echo "> /etc/supervisord/conf.d/$BASENAME.conf"
-
-# systemd / system
-# 無効化: 雛形の ExecStart (/home/ec2-user/bin/mir-<プロジェクトコード>.py) に対応するスクリプトが無く、
-#         有効にすると毎分失敗するタイマーができるため。プロジェクト専用のタイマーが必要になったら、
-#         ~/bin/etc_sytemd_system_BASENAME_*.txt を元に手動で作成する。
-#
-curl -fo /tmp/systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
-$SED -i "s/BASENAME/$BASENAME/g" /tmp/systemd.service
-sudo mv /tmp/systemd.service /etc/systemd/system/mir-$BASENAME.service
-echo "> /etc/systemd/system/mir-$BASENAME.service"
-#
-curl -fo /tmp/systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
-$SED -i "s/BASENAME/$BASENAME/g" /tmp/systemd.timer
-sudo mv /tmp/systemd.timer /etc/systemd/system/mir-$BASENAME.timer
-echo "> /etc/systemd/system/mir-$BASENAME.timer"
-#
-sudo chown root /etc/systemd/system/mir-$BASENAME.*
-sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
-#
-sudo systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*
-sudo systemctl daemon-reload
-sudo systemctl enable mir-$BASENAME.timer
-sudo systemctl restart mir-$BASENAME.timer
-sudo systemctl list-timers mir-$BASENAME.timer
-sudo journalctl -n 50 -u mir-$BASENAME.service 
-
-# mysql
-DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
-DB_DATABASE=`grep DB_DATABASE= $DIR/live/.env | cut -d = -f 2`
-DB_USERNAME=`grep DB_USERNAME= $DIR/live/.env | cut -d = -f 2`
-DB_PASSWORD=`grep DB_PASSWORD= $DIR/live/.env | cut -d = -f 2`
-
-# git first pull
-cd $DIR/live; git pull
-cd -
-cd $DIR/test; git pull
-cd -
-
-# permission
-set_laravel_perms $DIR/live
-set_laravel_perms $DIR/test
-
-echo "[dir]"
-echo "$DIR/live"
-
-echo "[mysql]"
-echo "DB_HOST     : $DB_HOST"
-echo "DB_DATABASE : $DB_DATABASE"
-echo "DB_USERNAME : $DB_USERNAME"
-echo "DB_PASSWORD : $DB_PASSWORD"
+# 4. timer を有効にする（live で artisan schedule:run を毎分実行）
 echo
-echo "[migration]"
-echo "php artisan migrate"
+echo "===== timer ====="
+$SUDO systemd-analyze verify "$SERVICE_FILE" "$TIMER_FILE" 2>/dev/null
+$SUDO $SYSTEMCTL daemon-reload
+$SUDO $SYSTEMCTL enable "$UNIT.timer"
+$SUDO $SYSTEMCTL restart "$UNIT.timer"
+$SYSTEMCTL list-timers "$UNIT.timer" --no-pager
+
+# 5. 念のため最新にして、パーミッションを設定し直す
+for stage in live test; do
+    (cd "$DIR/$stage" && git pull)
+    set_laravel_perms "$DIR/$stage"
+done
+
 echo
-echo "[/etc/hosts]"
-echo "127.0.0.1   loopback-$DOMAIN"
-echo "127.0.0.1   loopback-test-$DOMAIN"
-echo
-echo "[Route 53]"
-echo "$DOMAIN"
-echo "test-$DOMAIN"
-echo
-echo "[vhost]"
-echo "cd /etc/httpd/conf.d/"
-echo "cat $HTTPD_CONF_DIR/vhost-$BASENAME-live.conf"
-echo "cat $HTTPD_CONF_DIR/vhost-$BASENAME-test.conf"
-echo "sudo service httpd configtest"
-echo "sudo service httpd graceful"
-echo
-#echo "[crontab]"
-#echo "sudo -u apache crontab -e"
-#echo "* * * * * sleep 1 && cd $DIR/live && php artisan schedule:run >> /dev/null 2>&1"
-echo "[supervisord / queue]"
-echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
-echo "sudo /usr/local/bin/supervisorctl status"
-echo "sudo /usr/local/bin/supervisorctl update"
-echo "sudo /usr/local/bin/supervisorctl status"
-echo 
-echo "[timer]"
-echo "/etc/systemd/system/mir-$BASENAME.system"
-echo "/etc/systemd/system/mir-$BASENAME.timer"
-echo "systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*"
-echo "systemctl list-timers mir-$BASENAME.timer"
-echo "journalctl -n 50 -u mir-$BASENAME.service"
+echo "設置しました:"
+echo "  $DIR/sky  (live → $DOMAIN)"
+echo "  $DIR/fish (test → test-$DOMAIN)"
+echo "  $VHOST_LIVE"
+echo "  $VHOST_TEST"
+echo "  $SUPERVISOR_CONF"
+echo "  $SERVICE_FILE（有効にしました）"
+echo "  $TIMER_FILE（有効にしました）"
+
+# 6. 残りの作業（コマンドの表示だけで、実行はしない）
+cat <<EOF
+
+========================================================
+以下は手で実行してください
+========================================================
+
+[1. mysql（deploy から取得した .env の値）]
+DB_HOST     : $(env_value DB_HOST)
+DB_DATABASE : $(env_value DB_DATABASE)
+DB_USERNAME : $(env_value DB_USERNAME)
+DB_PASSWORD : $(env_value DB_PASSWORD)
+
+[2. mysql]
+# RDS にマスターユーザーで接続する（ローカルの MariaDB なら sudo mysql）
+mysql -u <RDSのマスターユーザー> -p -h <RDSのエンドポイント>
+create database DATABASE_NAME default charset utf8mb4;
+create user '${BASENAME}_prd_user'@'%' identified by '${BASENAME}_prd_pass_XXXX';
+grant all on DATABASE_NAME.* to '${BASENAME}_prd_user'@'%';
+
+[3. migration]
+cd $DIR/live
+php artisan migrate
+
+[4. Route 53 / /etc/hosts]
+$DOMAIN と test-$DOMAIN を、このサーバに向ける
+sudo sh -c 'printf "127.0.0.1   loopback-$DOMAIN\n127.0.0.1   loopback-test-$DOMAIN\n" >> /etc/hosts'
+
+[5. httpd]
+cat $VHOST_LIVE
+cat $VHOST_TEST
+sudo apachectl configtest
+sudo systemctl reload httpd
+
+[6. supervisor / queue worker]
+# 雛形はコメントアウトされているので、queue を使う場合は # を外す
+sudo vi $SUPERVISOR_CONF
+sudo /usr/local/bin/supervisorctl update
+sudo /usr/local/bin/supervisorctl status
+
+[7. timer の確認（有効化は済み）]
+systemctl list-timers $UNIT.timer
+journalctl -n 50 -u $UNIT.service
+
+[Web]
+http://$DOMAIN/
+http://test-$DOMAIN/
+EOF
