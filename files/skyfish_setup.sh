@@ -223,22 +223,24 @@ echo "> /etc/supervisord/conf.d/$BASENAME.conf"
 # 無効化: 雛形の ExecStart (/home/ec2-user/bin/mir-<プロジェクトコード>.py) に対応するスクリプトが無く、
 #         有効にすると毎分失敗するタイマーができるため。プロジェクト専用のタイマーが必要になったら、
 #         ~/bin/etc_sytemd_system_BASENAME_*.txt を元に手動で作成する。
-curl -fo systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
-$SED -i "s/BASENAME/mir-$BASENAME/g" systemd.timer
-sudo mv systemd.timer /etc/systemd/system/mir-$BASENAME.timer
+curl -fo /tmp/systemd.timer https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_timer.txt
+$SED -i "s/BASENAME/mir-$BASENAME/g" /tmp/systemd.timer
+sudo mv /tmp/systemd.timer /etc/systemd/system/mir-$BASENAME.timer
 echo "> /etc/systemd/system/mir-$BASENAME.timer"
 #
-curl -fo systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
-$SED -i "s/BASENAME/mir-$BASENAME/g" systemd.service
-sudo mv systemd.service /etc/systemd/system/mir-$BASENAME.service
+curl -fo /tmp/systemd.service https://raw.githubusercontent.com/mir-aie/000S-amazon-linux2-setup/master/files/etc_sytemd_system_BASENAME_service.txt
+$SED -i "s/BASENAME/mir-$BASENAME/g" /tmp/systemd.service
+sudo mv /tmp/systemd.service /etc/systemd/system/mir-$BASENAME.service
 echo "> /etc/systemd/system/mir-$BASENAME.service"
 #
 sudo chown root /etc/systemd/system/mir-$BASENAME.*
 sudo chgrp root /etc/systemd/system/mir-$BASENAME.*
 #
+sudo systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*
 sudo systemctl daemon-reload
-sudo systemctl enable --now mir-$BASENAME.timer
-systemctl list-timers
+sudo systemctl enable mir-$BASENAME.timer
+sudo systemctl restart mir-$BASENAME.timer
+systemctl list-timers mir-$BASENAME.timer
 
 # mysql
 DB_HOST=`grep DB_HOST= $DIR/live/.env | cut -d = -f 2`
@@ -256,6 +258,8 @@ cd -
 set_laravel_perms $DIR/live
 set_laravel_perms $DIR/test
 
+echo "[dir]"
+echo "$DIR/live"
 
 echo "[mysql]"
 echo "DB_HOST     : $DB_HOST"
@@ -289,3 +293,10 @@ echo "cat /etc/supervisord/conf.d/$BASENAME.conf"
 echo "sudo /usr/local/bin/supervisorctl status"
 echo "sudo /usr/local/bin/supervisorctl update"
 echo "sudo /usr/local/bin/supervisorctl status"
+echo 
+echo "[timer]"
+echo "/etc/systemd/system/mir-$BASENAME.system"
+echo "/etc/systemd/system/mir-$BASENAME.timer"
+echo "systemd-analyze verify /etc/systemd/system/mir-$BASENAME.*"
+echo "systemctl list-timers mir-$BASENAME.timer"
+
